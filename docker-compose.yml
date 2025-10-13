@@ -1,0 +1,20 @@
+services:
+  # Único servicio: nuestra aplicación Backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: backend-backend-1
+    # Mantenemos el contenedor corriendo para poder entrar a su shell
+    command: sleep infinity
+    ports:
+      - "8000:8000"
+    volumes:
+      # Montamos el código local para ver cambios en tiempo real
+      - .:/app
+    environment:
+      # La URL ahora apunta a un archivo SQLite que se creará dentro de /app
+      DATABASE_URL: sqlite+aiosqlite:///dev.db
+      PROJECT_NAME: BackendBase
+      SECRET_KEY: una-clave-secreta-para-desarrollo
+      ENVIRONMENT: dev
