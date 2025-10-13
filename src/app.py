@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 # Importamos el nuevo router
-from src.adapters.api.routes import health
+from src.adapters.api.routes import health, status
 from src.config import settings
 from src.log import logger
 
@@ -32,3 +32,4 @@ async def shutdown_event():
 
 # Incluimos el router de health check
 app.include_router(health.router)
+app.include_router(status.router)
