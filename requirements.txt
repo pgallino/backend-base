@@ -12,3 +12,4 @@ aiosqlite
 # Herramientas de Calidad de Código (Solo Formato)
 black
 isort
+mypy

@@ -1,0 +1,37 @@
+# Nombre del Workflow (aparece en GitHub)
+name: Code Quality Checks
+
+# Define cuándo se ejecuta el workflow
+on:
+  push:
+    branches: [ main ] # Se ejecuta en cada push a la rama principal
+  pull_request:
+    branches: [ main ] # Se ejecuta en cada PR hacia la rama principal
+
+jobs:
+  check_quality: # Nombre genérico para el job de chequeo de calidad
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12' 
+
+    # Instala las dependencias necesarias para los comandos de 'make'
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+
+    # --------------------------------------------
+    # Paso 1: Chequeo de Formato (Black e Isort)
+    # --------------------------------------------
+    - name: Run Format Check
+      run: make format-check
+      
+    # --------------------------------------------
+    # Paso 2: Chequeo de Tipos (Mypy)
+    # --------------------------------------------
+    - name: Run Mypy Linting
+      run: make lint

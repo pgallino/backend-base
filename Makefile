@@ -1,7 +1,7 @@
 # Variable que apunta a nuestra carpeta de código fuente
 PYTHON_FILES = src
 
-.PHONY: up down shell run format format-check
+.PHONY: up down shell run format format-check check
 
 # --- Comandos para el Host (tu máquina) ---
 
@@ -39,3 +39,14 @@ format-check:
 	@echo "-> Verificando formato..."
 	black --check $(PYTHON_FILES)
 	isort --check-only $(PYTHON_FILES)
+
+# Chequeo de Tipos Estáticos (Linting con Mypy)
+lint:
+	@echo "-> Corriendo chequeo de tipos (Mypy)..."
+	mypy $(PYTHON_FILES)
+
+# Ejecuta tanto format-check como lint
+check:
+	@echo "-> Ejecutando verificaciones completas..."
+	$(MAKE) format-check
+	$(MAKE) lint
