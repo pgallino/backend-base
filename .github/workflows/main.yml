@@ -29,6 +29,11 @@ jobs:
 
       - name: Run tests (make test)
         run: make test
+        env:
+          DATABASE_URL: sqlite+aiosqlite:///dev.db
+          SECRET_KEY: test-secret
+          PROJECT_NAME: BackendBase
+          ENVIRONMENT: test
 
       - name: Upload coverage report (artifact)
         uses: actions/upload-artifact@v4
