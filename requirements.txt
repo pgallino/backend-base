@@ -17,3 +17,5 @@ mypy
 # Testing
 pytest
 pytest-cov
+pytest-bdd
+httpx

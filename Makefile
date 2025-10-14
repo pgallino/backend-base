@@ -1,7 +1,7 @@
 # Variable que apunta a nuestra carpeta de código fuente
 PYTHON_FILES = src
 
-.PHONY: up down shell run format format-check check test ci
+.PHONY: up down shell run format format-check check test test-unit test-acceptance ci
 
 # --- Comandos para el Host (tu máquina) ---
 
@@ -55,6 +55,16 @@ check:
 test:
 	@echo "-> Ejecutando tests (pytest con coverage)..."
 	PYTHONPATH=. pytest -q --cov=src/domain --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=75
+
+# Tests unitarios solamente
+test-unit:
+	@echo "-> Ejecutando tests UNITARIOS..."
+	PYTHONPATH=. pytest -q tests/domain --cov=src/domain --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=75
+
+# Tests de aceptación (BDD) solamente
+test-acceptance:
+	@echo "-> Ejecutando tests de ACEPTACIÓN (BDD)..."
+	PYTHONPATH=. pytest -q tests/acceptance --cov=src/domain --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=75
 
 # Ejecuta tests en modo watch (requiere entrainment externo como entr o ptw)
 # test-watch:
