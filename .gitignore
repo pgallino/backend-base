@@ -9,3 +9,10 @@ dev.db
 
 # Directorios de cache
 .pytest_cache/
+.mypy_cache/
+
+# Reportes de cobertura
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml

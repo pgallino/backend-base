@@ -1,0 +1,7 @@
+[run]
+omit =
+    src/domain/__init__.py
+
+[report]
+omit =
+    src/domain/__init__.py

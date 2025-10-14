@@ -13,3 +13,7 @@ aiosqlite
 black
 isort
 mypy
+
+# Testing
+pytest
+pytest-cov

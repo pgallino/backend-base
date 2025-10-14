@@ -9,29 +9,29 @@ on:
     branches: [ main ] # Se ejecuta en cada PR hacia la rama principal
 
 jobs:
-  check_quality: # Nombre genérico para el job de chequeo de calidad
+  check-quality:
+    name: Checks + Tests
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12' 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12' 
 
-    # Instala las dependencias necesarias para los comandos de 'make'
-    - name: Install dependencies
-      run: pip install -r requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-    # --------------------------------------------
-    # Paso 1: Chequeo de Formato (Black e Isort)
-    # --------------------------------------------
-    - name: Run Format Check
-      run: make format-check
-      
-    # --------------------------------------------
-    # Paso 2: Chequeo de Tipos (Mypy)
-    # --------------------------------------------
-    - name: Run Mypy Linting
-      run: make lint
+      - name: Run format & types (make check)
+        run: make check
+
+      - name: Run tests (make test)
+        run: make test
+
+      - name: Upload coverage report (artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml

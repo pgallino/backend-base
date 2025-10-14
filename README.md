@@ -245,22 +245,26 @@ make check
 2. make lint          # Verifica tipos estáticos
 ```
 
-### Configuración para CI/CD
+## 🧪 Tests y Cobertura
 
-```yaml
-# Ejemplo para GitHub Actions
-steps:
-  - uses: actions/checkout@v2
-  - name: Setup Python
-    uses: actions/setup-python@v2
-    with:
-      python-version: '3.12'
-  - name: Install dependencies
-    run: pip install -r requirements.txt
-  - name: Check code quality
-    run: make check
-  - name: Run tests
-    run: make test  # (por implementar)
+Este proyecto usa pytest para pruebas unitarias del Dominio.
+
+La cobertura está configurada para omitir `src/domain/__init__.py` mediante `.coveragerc`.
+
+### Ejecutar tests
+
+```bash
+make test
+```
+
+Por defecto, se incluye reporte de cobertura en consola para `src/domain`.
+
+### Ver cobertura en CI
+
+El objetivo `ci` genera `coverage.xml` para integraciones con CI.
+
+```bash
+make ci
 ```
 
 ## ⚙️ Configuración

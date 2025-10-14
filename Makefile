@@ -1,7 +1,7 @@
 # Variable que apunta a nuestra carpeta de código fuente
 PYTHON_FILES = src
 
-.PHONY: up down shell run format format-check check
+.PHONY: up down shell run format format-check check test ci
 
 # --- Comandos para el Host (tu máquina) ---
 
@@ -50,3 +50,19 @@ check:
 	@echo "-> Ejecutando verificaciones completas..."
 	$(MAKE) format-check
 	$(MAKE) lint
+
+# Ejecuta tests unitarios con pytest
+test:
+	@echo "-> Ejecutando tests (pytest con coverage)..."
+	PYTHONPATH=. pytest -q --cov=src/domain --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=75
+
+# Ejecuta tests en modo watch (requiere entrainment externo como entr o ptw)
+# test-watch:
+# 	ptw -- -q --cov=src/domain --cov-report=term-missing
+
+# Objetivo de CI: calidad + tests
+ci:
+	@echo "-> Ejecutando CI local (check + test)..."
+	$(MAKE) check
+	PYTHONPATH=. pytest --cov=src/domain --cov-report=xml:coverage.xml --cov-report=term-missing --cov-fail-under=75
+	@echo "✅ CI OK: formato, tipos y tests pasaron."
