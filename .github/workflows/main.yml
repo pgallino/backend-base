@@ -53,7 +53,6 @@ jobs:
       # PASO 1: Disparar el Despliegue y Capturar el DEPLOY_ID
       # ----------------------------------------------------------------------
       - name: Trigger Render deploy
-        id: trigger
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
@@ -69,7 +68,6 @@ jobs:
           echo "Trigger response: $RESP"
           
           # Intenta extraer el ID del despliegue.
-          # Si falla, es porque la respuesta no es un JSON válido o la autenticación falló.
           DEPLOY_ID=$(echo "$RESP" | jq -r '.id')
           
           if [ -z "${DEPLOY_ID}" ] || [ "${DEPLOY_ID}" = "null" ]; then
@@ -79,7 +77,7 @@ jobs:
           
           echo "✅ Deploy Triggered. DEPLOY_ID=${DEPLOY_ID}"
           
-          # Guarda el DEPLOY_ID en el entorno de GitHub para que el siguiente paso lo use
+          # *** CLAVE: Guarda el DEPLOY_ID en el entorno de GitHub para que el siguiente paso lo use ***
           echo "DEPLOY_ID=${DEPLOY_ID}" >> "$GITHUB_ENV"
 
 
@@ -87,23 +85,25 @@ jobs:
       # PASO 2: Esperar hasta que esté 'live'
       # ----------------------------------------------------------------------
       - name: Wait until live (Monitor)
+        # *** CLAVE: Forzar la carga del DEPLOY_ID desde el entorno del job ***
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          DEPLOY_ID: ${{ env.DEPLOY_ID }} # Carga la variable guardada en el paso anterior
         run: |
           set -euo pipefail
           
-          # Verifica si la variable DEPLOY_ID se cargó correctamente del entorno
+          # Verifica si la variable DEPLOY_ID se cargó correctamente
           if [ -z "${DEPLOY_ID}" ]; then
-              echo "❌ Error: DEPLOY_ID no está definido. El paso anterior falló al exportarlo."
+              echo "❌ Error fatal: DEPLOY_ID no está definido. El flujo de variables falló."
               exit 1
           fi
 
           ATTEMPTS=0
-          MAX_ATTEMPTS=120   # ~20 min (120 * 10 segundos)
+          MAX_ATTEMPTS=120   # ~20 min
           SLEEP=10
           
           while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-            # Llama a la API para verificar el estado del despliegue
+            # Llama a la API para verificar el estado del despliegue usando el DEPLOY_ID
             STATUS_JSON=$(curl -s -H "Authorization: Bearer ${RENDER_API_KEY}" \
               "https://api.render.com/v1/deploys/${DEPLOY_ID}")
             
@@ -111,12 +111,13 @@ jobs:
             echo "Render API Response (Attempt ${ATTEMPTS}): $STATUS_JSON"
             # ------------------
 
-            # Intenta obtener el estado del despliegue
-            # Si el JSON no tiene el campo 'status' (p.ej., 404), jq fallará.
+            # Verifica si la respuesta contiene el campo 'status' (para evitar el error 404/jq)
             if ! echo "$STATUS_JSON" | jq -e 'has("status")' > /dev/null 2>&1; then
+                # Si el ID fue correcto y el despliegue terminó antes de que este paso comenzara,
+                # podría ser que el ID ya no esté en el endpoint de "deploys". 
+                # Pero en caso de un 404 simple (como nos pasó), fallamos de inmediato.
                 echo "❌ Error: La respuesta de la API no contiene el campo 'status'."
                 echo "Respuesta completa: $STATUS_JSON"
-                # Si el error es un 404, el ID es incorrecto. Si es otro, puede ser temporal.
                 exit 1
             fi
 
