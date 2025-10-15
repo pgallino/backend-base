@@ -38,7 +38,7 @@ jobs:
           name: coverage-xml
           path: coverage.xml
 
-deploy-render:
+  deploy-render:
     name: Deploy to Render
     needs: check-quality
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
