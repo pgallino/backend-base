@@ -64,17 +64,23 @@ jobs:
           fi
           echo "DEPLOY_ID=${DEPLOY_ID}" >> "$GITHUB_ENV"
 
-      - name: Wait until live
+      - name: Wait until live (DEBUG)
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
         run: |
           set -euo pipefail
           ATTEMPTS=0
-          MAX_ATTEMPTS=120   # ~20 min
+          MAX_ATTEMPTS=120
           SLEEP=10
           while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
+            # Llama a la API y guarda la respuesta
             STATUS_JSON=$(curl -s -H "Authorization: Bearer ${RENDER_API_KEY}" \
               "https://api.render.com/v1/deploys/${DEPLOY_ID}")
+            
+            # --- LÍNEA DE DEPURACIÓN AÑADIDA ---
+            echo "Render API Response: $STATUS_JSON"
+            # ------------------------------------
+            
             STATUS=$(echo "$STATUS_JSON" | jq -r '.status')
             echo "Deploy status: $STATUS (attempt ${ATTEMPTS})"
             case "$STATUS" in
