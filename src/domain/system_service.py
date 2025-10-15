@@ -2,7 +2,7 @@
 
 from typing import final
 
-from .system import _build_status_message
+from .system import build_status_message
 
 
 @final
@@ -19,4 +19,4 @@ class SystemService:
         Orquesta la lógica interna para generar el estado del sistema.
         """
         # La Fachada llama a la lógica atómica del dominio
-        return _build_status_message(project_name, environment)
+        return build_status_message(project_name, environment)

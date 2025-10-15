@@ -9,7 +9,7 @@ Pydantic o bases de datos.
 """
 
 
-def _build_status_message(project_name: str, environment: str) -> dict:
+def build_status_message(project_name: str, environment: str) -> dict:
     """
     Construye el mensaje de estado del sistema.
 

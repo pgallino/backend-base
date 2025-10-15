@@ -5,10 +5,6 @@ uvicorn[standard]
 # Gestión de Configuración
 pydantic-settings
 
-# Base de Datos (ORM y driver de SQLite)
-sqlalchemy[asyncio]
-aiosqlite
-
 # Herramientas de Calidad de Código (Solo Formato)
 black
 isort
@@ -19,3 +15,4 @@ pytest
 pytest-cov
 pytest-bdd
 httpx
+pytest-pythonpath

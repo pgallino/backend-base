@@ -51,28 +51,25 @@ check:
 	$(MAKE) format-check
 	$(MAKE) lint
 
-# Ejecuta tests unitarios con pytest
+# Ejecuta tests unitarios y aceptacion con pytest
 test:
-	@echo "-> Ejecutando tests (pytest con coverage)..."
-	PYTHONPATH=. pytest -q --cov=src/domain --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=75
+	@echo "-> Ejecutando tests (pytest con coverage desde pytest.ini)..."
+	$(MAKE) test-unit
+	$(MAKE) test-acceptance
 
 # Tests unitarios solamente
 test-unit:
 	@echo "-> Ejecutando tests UNITARIOS..."
-	PYTHONPATH=. pytest -q tests/domain --cov=src/domain --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=75
+	pytest tests/domain
 
 # Tests de aceptación (BDD) solamente
 test-acceptance:
 	@echo "-> Ejecutando tests de ACEPTACIÓN (BDD)..."
-	PYTHONPATH=. pytest -q tests/acceptance --cov=src/domain --cov-report=term-missing --cov-report=xml:coverage.xml --cov-fail-under=75
-
-# Ejecuta tests en modo watch (requiere entrainment externo como entr o ptw)
-# test-watch:
-# 	ptw -- -q --cov=src/domain --cov-report=term-missing
+	pytest tests/acceptance
 
 # Objetivo de CI: calidad + tests
 ci:
 	@echo "-> Ejecutando CI local (check + test)..."
 	$(MAKE) check
-	PYTHONPATH=. pytest --cov=src/domain --cov-report=xml:coverage.xml --cov-report=term-missing --cov-fail-under=75
+	$(MAKE) test
 	@echo "✅ CI OK: formato, tipos y tests pasaron."
