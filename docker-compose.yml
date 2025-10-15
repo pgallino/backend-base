@@ -3,13 +3,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: backend-backend-1
-    command: sleep infinity
+    container_name: backend
+    command: ["sh", "-c", "uvicorn src.app:app --host 0.0.0.0 --port ${PORT:-8000} --reload"]
     ports:
       - "8000:8000"
-    environment:
-      PROJECT_NAME: BackendBase
-      ENVIRONMENT: dev
-      PORT: 8000
     volumes:
       - .:/app
