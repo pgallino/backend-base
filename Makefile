@@ -7,18 +7,18 @@ PYTHON_FILES = src
 
 # Levanta el servicio de Docker en segundo plano
 up:
-	docker-compose up -d --build
+	docker compose up -d --build
 
 # Detiene y elimina el servicio
 down:
-	docker-compose down
+	docker compose down
 
 # El comando principal para empezar a trabajar: levanta y entra a la shell
 shell: up
 	@echo "-> Ingresando a la shell del contenedor..."
-	@echo "   (Una vez dentro, usa 'make run' o 'make format')"
+	@echo "   (Una vez dentro, usa 'make run' o 'make format, etc')"
 	@echo "----------------------------------------------------------------------"
-	docker exec -it backend-backend-1 /bin/bash
+	docker compose exec backend sh
 
 
 # --- Comandos para el Contenedor (dentro de la shell) ---
