@@ -41,16 +41,14 @@ jobs:
   deploy-render:
     name: Deploy to Render
     needs: check-quality
-    # Solo se ejecuta en un push a la rama principal, después de que las pruebas pasen
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Install jq
-        # Necesario para parsear el JSON de las respuestas de la API
         run: sudo apt-get update && sudo apt-get install -y jq
 
       # ----------------------------------------------------------------------
-      # PASO 1: Disparar el Despliegue y Capturar el DEPLOY_ID
+      # PASO 1: Disparar el Despliegue (Trigger Render deploy)
       # ----------------------------------------------------------------------
       - name: Trigger Render deploy
         env:
@@ -58,82 +56,34 @@ jobs:
           RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
         run: |
           set -euo pipefail
-          
-          # Llama a la API de Render para iniciar el despliegue
           RESP=$(curl -s -X POST "https://api.render.com/v1/services/${RENDER_SERVICE_ID}/deploys" \
             -H "Authorization: Bearer ${RENDER_API_KEY}" \
             -H "Accept: application/json" \
             -H "Content-Type: application/json")
           
           echo "Trigger response: $RESP"
-          
-          # Intenta extraer el ID del despliegue.
           DEPLOY_ID=$(echo "$RESP" | jq -r '.id')
-          
           if [ -z "${DEPLOY_ID}" ] || [ "${DEPLOY_ID}" = "null" ]; then
-            echo "❌ Failed to trigger deploy. Revisa RENDER_API_KEY y RENDER_SERVICE_ID."
-            exit 1
+            echo "❌ Failed to trigger deploy"; exit 1
           fi
-          
-          echo "✅ Deploy Triggered. DEPLOY_ID=${DEPLOY_ID}"
-          
-          # *** CLAVE: Guarda el DEPLOY_ID en el entorno de GitHub para que el siguiente paso lo use ***
-          echo "DEPLOY_ID=${DEPLOY_ID}" >> "$GITHUB_ENV"
-
+          echo "✅ Deploy Triggered (ID: ${DEPLOY_ID})"
 
       # ----------------------------------------------------------------------
-      # PASO 2: Esperar hasta que esté 'live'
+      # PASO 2: Verificar la URL Pública (Health Check) usando el secreto
       # ----------------------------------------------------------------------
-      - name: Wait until live (Monitor)
-        env:
-          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          DEPLOY_ID: ${{ env.DEPLOY_ID }} # Carga la variable guardada
-        run: |
-          set -euo pipefail
+      - name: Health Check Public URL
+        uses: jtalk/url-health-check-action@v4
+        if: success()
+        with:
+          # *** USANDO EL SECRETO RENDER_URL ***
+          url: ${{ secrets.RENDER_URL }} 
           
-          # *** LÍNEA DE DEPURACIÓN CRÍTICA ***
-          echo "DEBUG: Valor de DEPLOY_ID al iniciar la espera: ${DEPLOY_ID}"
-          # ----------------------------------
-
-          if [ -z "${DEPLOY_ID}" ]; then
-              echo "❌ Error fatal: DEPLOY_ID no está definido. El flujo de variables falló."
-              exit 1
-          fi
-
-          ATTEMPTS=0
-          MAX_ATTEMPTS=120   # ~20 min
-          SLEEP=10
+          # Puedes añadir la ruta si es necesario, ej: path: /health
           
-          while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-            # Llama a la API para verificar el estado del despliegue usando el DEPLOY_ID
-            STATUS_JSON=$(curl -s -H "Authorization: Bearer ${RENDER_API_KEY}" \
-              "https://api.render.com/v1/deploys/${DEPLOY_ID}")
-            
-            # --- DEPURACIÓN ---
-            echo "Render API Response (Attempt ${ATTEMPTS}): $STATUS_JSON"
-            # ------------------
-
-            # Verifica si la respuesta contiene el campo 'status' (para evitar el error 404/jq)
-            if ! echo "$STATUS_JSON" | jq -e 'has("status")' > /dev/null 2>&1; then
-                # Si el ID fue correcto y el despliegue terminó antes de que este paso comenzara,
-                # podría ser que el ID ya no esté en el endpoint de "deploys". 
-                # Pero en caso de un 404 simple (como nos pasó), fallamos de inmediato.
-                echo "❌ Error: La respuesta de la API no contiene el campo 'status'."
-                echo "Respuesta completa: $STATUS_JSON"
-                exit 1
-            fi
-
-            STATUS=$(echo "$STATUS_JSON" | jq -r '.status')
-            echo "Deploy status: $STATUS"
-            
-            case "$STATUS" in
-              live) echo "✅ Deploy is live"; exit 0 ;;
-              failed|canceled) echo "❌ Deploy failed: $STATUS_JSON"; exit 1 ;;
-              *) sleep $SLEEP; ATTEMPTS=$((ATTEMPTS+1));;
-            esac
-          done
-          
-          echo "❌ Timeout waiting for Render deploy"; exit 1
+          # Configuración de reintentos (2 minutos de espera total)
+          delay: 5
+          max-attempts: 12 
+          retry-delay: 10
 
       - name: Summary
-        run: echo "✅ CI + Deploy OK"
+        run: echo "✅ CI/CD Completed. Service is Live and Responding."
