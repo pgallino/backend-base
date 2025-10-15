@@ -38,7 +38,7 @@ jobs:
           name: coverage-xml
           path: coverage.xml
 
-  deploy-render:
+deploy-render:
     name: Deploy to Render
     needs: check-quality
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -69,21 +69,21 @@ jobs:
           echo "✅ Deploy Triggered (ID: ${DEPLOY_ID})"
 
       # ----------------------------------------------------------------------
-      # PASO 2: Verificar la URL Pública (Health Check) usando el secreto
+      # PASO 2: Health Check Público
       # ----------------------------------------------------------------------
       - name: Health Check Public URL
         uses: jtalk/url-health-check-action@v4
         if: success()
         with:
-          # *** USANDO EL SECRETO RENDER_URL ***
           url: ${{ secrets.RENDER_URL }} 
           
-          # Puedes añadir la ruta si es necesario, ej: path: /health
-          
-          # Configuración de reintentos (2 minutos de espera total)
-          delay: 5
+          # Intentos totales
           max-attempts: 12 
-          retry-delay: 10
+          
+          # Espera 20 segundos entre cada intento (12 * 20s = 4 minutos totales)
+          retry-delay: 20 
+          
+          # ELIMINADO: 'delay' no es un parámetro válido
 
       - name: Summary
         run: echo "✅ CI/CD Completed. Service is Live and Responding."
