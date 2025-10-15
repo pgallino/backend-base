@@ -85,14 +85,16 @@ jobs:
       # PASO 2: Esperar hasta que esté 'live'
       # ----------------------------------------------------------------------
       - name: Wait until live (Monitor)
-        # *** CLAVE: Forzar la carga del DEPLOY_ID desde el entorno del job ***
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
-          DEPLOY_ID: ${{ env.DEPLOY_ID }} # Carga la variable guardada en el paso anterior
+          DEPLOY_ID: ${{ env.DEPLOY_ID }} # Carga la variable guardada
         run: |
           set -euo pipefail
           
-          # Verifica si la variable DEPLOY_ID se cargó correctamente
+          # *** LÍNEA DE DEPURACIÓN CRÍTICA ***
+          echo "DEBUG: Valor de DEPLOY_ID al iniciar la espera: ${DEPLOY_ID}"
+          # ----------------------------------
+
           if [ -z "${DEPLOY_ID}" ]; then
               echo "❌ Error fatal: DEPLOY_ID no está definido. El flujo de variables falló."
               exit 1
