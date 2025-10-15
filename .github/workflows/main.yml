@@ -81,7 +81,7 @@ jobs:
           max-attempts: 12 
           
           # Espera 20 segundos entre cada intento (12 * 20s = 4 minutos totales)
-          retry-delay: 20 
+          retry-delay: 20s 
           
           # ELIMINADO: 'delay' no es un parámetro válido
 
