@@ -1,17 +1,22 @@
 # Backend Base
 
-Un proyecto base para desarrollo de APIs REST con FastAPI implementando **Arquitectura Hexagonal** (Ports & Adapters), con un ambiente de desarrollo completamente containerizado.
+Plantilla base para construir APIs REST con FastAPI usando Arquitectura Hexagonal (Ports & Adapters). A continuación encontrarás explicación de las tecnologías, guía de desarrollo, arquitectura de la fachada, tests, comandos Make, Docker, CI/CD y recomendaciones sobre secrets.
 
-## 📋 Tabla de Contenidos
+## Tabla de contenidos
 
-- [Arquitectura](#-arquitectura)
-- [Estructura del Proyecto](#-estructura-del-proyecto)
-- [Ambiente de Desarrollo](#-ambiente-de-desarrollo)
-- [Comandos Disponibles](#-comandos-disponibles)
-- [CI/CD y Calidad de Código](#-cicd-y-calidad-de-código)
-- [Configuración](#-configuración)
+- [Arquitectura](#arquitectura)
+- [Estructura del proyecto](#estructura-del-proyecto)
+- [Tecnologias y herramientas](#tecnologias-y-herramientas)
+- [Como desarrollar](#como-desarrollar)
+- [Arquitectura - Fachada](#arquitectura---fachada)
+- [Tests](#tests)
+- [Makefile](#makefile)
+- [Docker](#docker)
+- [CI/CD y deploy automatico](#cicd-y-deploy-automatico)
+- [.env / .env.example](#env--envexample)
+- [Recomendaciones y proximos pasos](#recomendaciones-y-proximos-pasos)
 
-## 🏗️ Arquitectura
+## Arquitectura
 
 Este proyecto implementa **Arquitectura Hexagonal** (también conocida como Ports & Adapters), que separa la lógica de negocio de los detalles de infraestructura.
 
@@ -68,7 +73,7 @@ Este proyecto implementa **Arquitectura Hexagonal** (también conocida como Port
 4. **Dominio** → `domain/system.py` (Lógica de negocio)
 5. **Response** ← Se devuelve por el mismo camino
 
-## 📁 Estructura del Proyecto
+## Estructura del proyecto
 
 ```
 backend-base/
@@ -85,252 +90,243 @@ backend-base/
 │   │       ├── facade.py         # Fachada de Aplicación
 │   │       └── routes/           # Rutas HTTP organizadas por funcionalidad
 │   │           ├── __init__.py
-│   │           ├── health.py     # Endpoint de salud básico
-│   │           └── status.py     # Endpoint de estado del sistema
-│   │
-│   └── domain/                   # DOMINIO (Núcleo de Negocio)
-│       ├── __init__.py
-│       ├── system_service.py     # Fachada del dominio
-│       └── system.py             # Lógica de negocio del sistema
-│
-├── docker-compose.yml            # Configuración del ambiente
-├── Dockerfile                    # Imagen del contenedor
-├── Makefile                      # Comandos de desarrollo
-├── requirements.txt              # Dependencias Python
-└── README.md                     # Este archivo
 ```
-
-### Detalles de Componentes
-
-#### **`src/app.py`**
-- Configuración principal de FastAPI
-- Registro de rutas y middleware
-- Eventos de startup/shutdown
-
-#### **`src/adapters/api/facade.py`**
-- **Patrón Facade**: Simplifica la interfaz hacia el dominio
-- **Único punto de entrada**: Todas las rutas usan esta fachada
-- **Inyección de dependencias**: Pasa configuración al dominio
-
-#### **`src/adapters/api/routes/`**
-- **Separación por funcionalidad**: Cada archivo maneja un área específica
-- **Responsabilidad única**: Solo adaptación HTTP ↔ Dominio
-- **Sin lógica de negocio**: Delegan todo a la fachada
-
-#### **`src/domain/`**
-- **Independiente de infraestructura**: No conoce HTTP, DB, etc.
-- **Testeable**: Lógica pura sin dependencias externas
-- **Reutilizable**: Puede usarse desde cualquier adaptador
-
-## 🐳 Ambiente de Desarrollo
-
-El proyecto está completamente containerizado para garantizar consistencia entre desarrolladores.
-
-### Tecnologías Utilizadas
-
-- **Python 3.12**: Lenguaje principal
-- **FastAPI**: Framework web moderno y rápido
-- **Docker**: Containerización del ambiente
-- **SQLite**: Base de datos para desarrollo
-- **Uvicorn**: Servidor ASGI para FastAPI
-
-### Configuración del Ambiente
-
-El ambiente se configura automáticamente con:
-
-```yaml
-# docker-compose.yml
-services:
-  backend:
-    build: .
-    ports:
-      - "8000:8000"         # API disponible en localhost:8000
-    volumes:
-      - .:/app              # Hot reload: cambios se reflejan inmediatamente
-    environment:
-      DATABASE_URL: sqlite+aiosqlite:///dev.db
-      PROJECT_NAME: BackendBase
-      ENVIRONMENT: dev
-```
-
-### Dockerfile Optimizado
-
-```dockerfile
-FROM python:3.12-slim
-
-# Herramientas necesarias
-RUN apt-get update && apt-get install -y build-essential make
-
-WORKDIR /app
-
-# Instalación de dependencias (aprovecha caché de Docker)
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-# Código fuente
-COPY src ./src
-```
-
-## 🚀 Comandos Disponibles
-
-Todos los comandos están definidos en el `Makefile` para facilidad de uso.
-
-### Comandos del Host (tu máquina)
-
-```bash
-# Levantar el ambiente completo
-make up
-
-# Detener y limpiar el ambiente
-make down
-
-# Entrar al contenedor para desarrollo
-make shell
-```
-
-### Comandos del Contenedor (dentro de la shell)
-
-```bash
-# Iniciar el servidor de desarrollo
-make run               # Servidor en http://localhost:8000 con hot reload
-
-# Formateo de código
-make format            # Aplica black e isort al código
-make format-check      # Verifica formato sin modificar
-
-# Análisis estático
-make lint              # Ejecuta mypy para verificar tipos
-
-# Verificación completa
-make check             # Ejecuta format-check + lint
-```
-
-### Flujo de Trabajo Típico
-
-```bash
-# 1. Levantar y entrar al ambiente
-make shell
-
-# 2. Dentro del contenedor, iniciar el servidor
-make run
-
-# 3. En otra terminal, hacer cambios y verificar calidad
-make check
-```
-
-## 🔍 CI/CD y Calidad de Código
-
-### Herramientas de Calidad
-
-#### **Black** - Formateo de Código
-- Formato consistente y automático
-- Configuración estándar sin personalización
-- Elimina debates sobre estilo de código
-
-#### **isort** - Organización de Imports
-- Ordena y agrupa imports automáticamente
-- Compatible con black
-- Mejora legibilidad del código
-
-#### **MyPy** - Verificación de Tipos
-- Análisis estático de tipos
-- Detecta errores antes de runtime
-- Mejora la mantenibilidad del código
-
-### Pipeline de Verificación
-
-```bash
-# El comando 'make check' ejecuta:
-1. make format-check  # Verifica formato de código
-2. make lint          # Verifica tipos estáticos
-```
-
-## 🧪 Tests y Cobertura
-
-Este proyecto usa pytest para pruebas unitarias del Dominio.
-
-La cobertura está configurada para omitir `src/domain/__init__.py` mediante `.coveragerc`.
-
-### Ejecutar tests
-
-```bash
-make test
-```
-
-Por defecto, se incluye reporte de cobertura en consola para `src/domain`.
-
-### Ver cobertura en CI
-
-El objetivo `ci` genera `coverage.xml` para integraciones con CI.
-
-```bash
-make ci
-```
-
-## ⚙️ Configuración
-
-### Variables de Ambiente
-
-La configuración se maneja a través de `src/config.py` usando Pydantic Settings:
-
-```python
-# Configuración principal
-PROJECT_NAME: str = "BackendBase"
-ENVIRONMENT: str = "dev"
-DATABASE_URL: str = "sqlite+aiosqlite:///dev.db"
-SECRET_KEY: str = "secret-key"
-```
-
-### Ambientes
-
-#### Desarrollo (por defecto)
-- Base de datos SQLite en archivo
-- Hot reload habilitado
-- Logs detallados
-- Puerto 8000 expuesto
-
-#### Producción (configuración futura)
-- Base de datos PostgreSQL
-- Logs estructurados
-- Variables de ambiente desde secrets
-- Configuración de seguridad adicional
-
-### Logging
-
-```python
-# src/log.py
-import logging
-
-logger = logging.getLogger("backend-base")
-# Configuración centralizada de logs
-```
-
-## 🧪 Endpoints Disponibles
-
-### Health Check
-```http
-GET /
-```
-Respuesta básica para verificar que el servicio está funcionando.
-
-### System Status
-```http
-GET /status
-```
-Estado detallado del sistema con información de configuración.
-
-### Documentación Automática
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-
-## 🔄 Próximos Pasos
-
-1. **Tests**: Implementar testing con pytest
-2. **Base de datos**: Configurar migraciones con Alembic
-3. **Autenticación**: JWT + OAuth2
-4. **Monitoreo**: Métricas y observabilidad
-5. **CI/CD**: Pipeline completo con GitHub Actions
 
 ---
 
-Este proyecto sirve como base sólida para APIs REST escalables, mantenibles y bien estructuradas.
+## Tecnologias y herramientas
+
+- Python 3.12 — lenguaje principal; usaremos tipado estático con mypy.
+- FastAPI — framework ASGI para endpoints y documentación automática (OpenAPI/Swagger).
+- Uvicorn — servidor ASGI para ejecutar la app.
+- pydantic / pydantic-settings — validación de datos y gestión de configuración desde `.env`.
+- Docker & Docker Compose — reproducibilidad del entorno y facilitan CI/CD.
+- pytest / pytest-bdd — testing unitario y pruebas de aceptación (BDD).
+- black, isort, mypy — formateo y chequeo estático de tipos.
+- Render (ejemplo) — plataforma de despliegue utilizada en el workflow de ejemplo.
+
+---
+
+## Como desarrollar
+
+1. Clonar el repositorio y posicionarse en la carpeta:
+
+```bash
+git clone <repo-url>
+cd backend-base
+```
+
+2. Copiar el ejemplo de variables y ajustar localmente:
+
+```bash
+cp .env.example .env
+# editar .env con tus valores si hace falta
+```
+
+3. Levantar el entorno y entrar a la shell del contenedor:
+
+- PowerShell (manual):
+
+```powershell
+docker compose up -d --build
+docker compose exec backend sh
+```
+
+- Git Bash / WSL (script):
+
+```bash
+bash ./scripts/enter_dev.sh
+```
+
+4. Dentro del contenedor, iniciar el servidor (si no arrancó automáticamente):
+
+```bash
+make run
+```
+
+5. Acceder a `http://localhost:8000` y a `http://localhost:8000/docs`.
+
+Consejos:
+- Edita el código en el host; los cambios se reflejan inmediatamente por el volume `.:/app`.
+- Usa `make check` para validar formato y tipos antes de commitear.
+
+---
+
+## Arquitectura - Fachada
+ 
+El proyecto centraliza la lógica de orquestación en una *Fachada de Aplicación* (`src/adapters/api/facade.py`). Las rutas HTTP actúan como adaptadores de entrada y delegan en la fachada, que a su vez llama al Dominio (`src/domain/`).
+
+Ejemplo sencillo:
+
+`src/adapters/api/routes/status.py`:
+
+```python
+from src.adapters.api.facade import api_facade
+
+@router.get('/status')
+async def get_system_status_route():
+    return api_facade.get_status()
+```
+
+`src/adapters/api/facade.py` (esquema):
+
+```python
+class ApplicationFacade:
+    def get_status(self) -> dict:
+        return system_service.get_system_status(
+            project_name=settings.PROJECT_NAME,
+            environment=settings.ENVIRONMENT,
+        )
+
+api_facade = ApplicationFacade()
+```
+
+Beneficios:
+
+- Rutas limpias y sin lógica de negocio.
+- La fachada es el único lugar que conoce cómo componer servicios del dominio.
+- Facilita testing unitario de dominio y testing de integración de adaptadores.
+
+---
+
+## Tests
+
+Este proyecto contiene dos tipos principales de pruebas:
+
+- Tests unitarios (unidad): se enfocan en funciones y clases del dominio sin dependencias externas.
+- Tests de aceptación (BDD): prueban el comportamiento desde la perspectiva del usuario/cliente, usando escenarios escritos en formato Gherkin (archivos `.feature`) y pasos definidos con `pytest-bdd`.
+
+Ubicación en el repo:
+
+- Tests unitarios: `tests/domain/` — verifican la lógica del dominio (ej.: `test_system.py`, `test_system_service.py`).
+- Tests de aceptación: `tests/acceptance/` — contiene `features/` (Gherkin) y `steps/` con los step-implementations (p. ej. `test_status_steps.py`).
+
+Cómo están configurados y por qué es correcto
+
+- `pytest.ini` configura `pythonpath = src` para que los tests puedan importar `src.*` sin manipular `sys.path`. Esto es correcto para un proyecto donde `src` contiene el paquete de la aplicación.
+- `testpaths = tests` centraliza la búsqueda de tests en la carpeta `tests`.
+- `python_files = test_*.py` hace que pytest descubra archivos que empiezan con `test_` — esto es consistente con los nombres actuales (`test_system.py`, `test_status_steps.py`).
+- `markers = bdd: pruebas BDD con pytest-bdd` declara el marcador BDD (útil para etiquetar y filtrar pruebas BDD en el CI o localmente).
+- `addopts` actualmente incluye opciones para coverage y un umbral mínimo; es adecuado para CI.
+
+En resumen: la configuración de `pytest.ini` es correcta para el layout actual del repo y permitirá ejecutar tanto tests unitarios como los de aceptación.
+
+Ejecutar pruebas
+
+- Ejecutar todos los tests y generar cobertura (local):
+    ```bash
+    make test
+    ```
+
+- Ejecutar solo tests unitarios:
+    ```bash
+    make test-unit
+    ```
+
+- Ejecutar solo tests de aceptación (BDD):
+    ```bash
+    make test-acceptance
+    ```
+
+- Ejecutar un escenario específico (BDD) o un step:
+    ```bash
+    pytest tests/acceptance -k "status"
+    ```
+
+Notas prácticas sobre los acceptance tests del repo
+
+- Los acceptance tests definidos usan `fastapi.testclient.TestClient` (sin arrancar un servidor separado). Esto es correcto: TestClient monta la aplicación en memoria y permite realizar peticiones HTTP simuladas rápidamente sin depender de procesos externos.
+- En `tests/acceptance/steps/test_status_steps.py` se usa `scenarios("../features/status.feature")` para cargar las feature files; la ruta relativa está bien (desde `steps/` hacia `features/`).
+- Como los steps devuelven responses del `TestClient`, no necesitas levantar el contenedor para ejecutar los acceptance tests localmente.
+
+Recomendaciones y mejoras
+
+- Mantener `pytest.ini` tal como está. Si en el futuro añades tests que requieren servicios externos (por ejemplo, Postgres), crea un marker o un perfil (`-m integration`) para distinguir tests que necesitan infraestructura de los que no.
+- Considera añadir un objetivo Make como `make test-acceptance` y `make test-unit` (si no lo tienes) para facilitar la ejecución desde la raíz; actualmente los targets existen (`test-unit`, `test-acceptance`).
+- Si sueles ejecutar tests desde el contenedor, asegúrate de que el contenedor tenga las mismas dependencias que tu `requirements.txt` y que `PYTHONPATH` o instalación editable apunten a `src`.
+- Para debugging de BDD: ejecuta `pytest -k <escenario> -s -vv` para ver salida completa y detener buffering.
+
+---
+
+En CI se ejecutan `make check` y `make test` (ver `.github/workflows/main.yml`).
+
+---
+
+## Makefile (comandos clave)
+
+- `make up` — construye y levanta contenedores (detached): `docker compose up -d --build`.
+- `make down` — detiene y limpia: `docker compose down`.
+- `make shell` — entra en la shell del servicio `backend`.
+- `make run` — arranca uvicorn en `0.0.0.0:8000 --reload`.
+- `make format` / `make format-check` — aplica o verifica `black` + `isort`.
+- `make lint` — ejecuta `mypy`.
+- `make check` — ejecuta `format-check` + `lint`.
+- `make test` — ejecuta tests.
+
+Uso recomendado durante dev: `make shell` → `make run`.
+
+---
+
+## Docker (detalle operativo)
+
+- `Dockerfile` genera la imagen basada en `python:3.12-slim`.
+- `docker-compose.yml` define el servicio `backend` con:
+  - puerto `8000:8000`
+  - volumen `.:/app` para hot reload
+  - comando que ejecuta `uvicorn src.app:app --host 0.0.0.0 --port ${PORT:-8000} --reload`
+
+Consejos:
+
+- En producción evita `--reload` y no montes el código como volumen.
+- Si necesitas DB en dev, añade un servicio `postgres` en `docker-compose.yml` y ajusta `DATABASE_URL`.
+
+---
+
+## CI/CD y Deploy automático (GitHub Actions → Render)
+
+El workflow en `.github/workflows/main.yml` realiza:
+
+1. Checkout y setup Python.
+2. Instala dependencias y ejecuta `make check` + `make test`.
+3. Si los checks pasan y el push es a `main`, dispara un deploy en Render usando la API.
+4. Hace health-check a la `RENDER_URL` para verificar que el servicio responde.
+
+Variables usadas en el workflow (definirlas en GitHub Secrets):
+
+- `RENDER_API_KEY` — token para la API de Render.
+- `RENDER_SERVICE_ID` — ID del servicio a desplegar.
+- `RENDER_URL` — URL pública para el health check.
+
+Variables sensibles adicionales que conviene guardar en Secrets:
+
+- `DATABASE_URL` — cadena de conexión para la base de datos en producción.
+- `SECRET_KEY` — clave secreta para JWT/firmas.
+
+No guardes valores reales en `.env.example`; usa este archivo sólo como referencia.
+
+---
+
+## .env / .env.example (qué variables incluir)
+
+Ejemplo mínimo en `.env.example`:
+
+```
+PROJECT_NAME=BackendBase
+ENVIRONMENT=dev
+PORT=8000
+```
+
+En producción añade al menos:
+
+```
+DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/dbname
+SECRET_KEY=<valor-secreto>
+```
+
+---
+
+## Recomendaciones y próximos pasos
+
+- Añadir migraciones con Alembic para DB relacional.
+- Añadir tests de integración con una DB real en CI.
+- Configurar logging estructurado y métricas para producción.
