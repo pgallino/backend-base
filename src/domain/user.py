@@ -17,7 +17,8 @@ class User:
 
     @classmethod
     def from_project(cls, project_name: str, environment: str) -> "User":
-        username = f"{project_name.lower()}_user"
+        # Garantizar que el username final esté en minúsculas
+        username = f"{project_name}_user".lower()
         return cls(
             id=1,
             username=username,
