@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 import pytest
 
 from src.app import app
+from src.config import settings
 
 
 # Load scenarios from the feature
@@ -38,4 +39,7 @@ def response_status_should_be(context: dict, status_code: int):
 @then(parsers.parse('the response should contain key "{key}" with value "{value}"'))
 def response_should_contain_key_value(context: dict, key: str, value: str):
     payload = context["response"].json()
+    # Allow placeholder {ENVIRONMENT} in feature files to adapt to runtime
+    if "{ENVIRONMENT}" in value:
+        value = value.replace("{ENVIRONMENT}", settings.ENVIRONMENT)
     assert str(payload.get(key)) == value
