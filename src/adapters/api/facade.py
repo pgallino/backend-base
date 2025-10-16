@@ -1,12 +1,13 @@
 # Contenido para src/adapters/api/facade.py
 
+from dataclasses import asdict
 from typing import final
 
 from src.config import settings
-from src.domain.system_service import SystemService
+from src.domain.user_service import UserService
 
-# Instanciamos la Fachada del Dominio
-system_service = SystemService()
+# Instanciamos la Fachada del Dominio centrada en User
+user_service = UserService()
 
 
 @final
@@ -19,17 +20,20 @@ class ApplicationFacade:
     (ej: base de datos).
     """
 
-    def get_status(self) -> dict:
-        """
-        Obtiene el estado general del sistema.
+    def health_check(self) -> dict:
+        return {
+            "project_name": settings.PROJECT_NAME,
+            "environment": settings.ENVIRONMENT,
+        }
 
-        Delega la llamada al Dominio, pasando la configuración de infraestructura.
-        """
-        # La Fachada de Aplicación llama a la Fachada de Dominio
-        return system_service.get_system_status(
+    def get_user(self) -> dict:
+        """Obtiene un usuario de ejemplo delegando a UserService."""
+        user = user_service.get_user(
             project_name=settings.PROJECT_NAME,
             environment=settings.ENVIRONMENT,
         )
+        # user is a dataclass instance; serialize to dict for API
+        return asdict(user)
 
 
 # Creamos una instancia global para que las rutas la usen.

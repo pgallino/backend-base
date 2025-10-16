@@ -58,7 +58,7 @@ Este proyecto implementa **Arquitectura Hexagonal** (también conocida como Port
 
 #### 3. **Dominio** (`src/domain/`)
 - **Lógica de negocio pura**: Sin dependencias de infraestructura
-- **System Service**: Fachada del dominio que expone operaciones de alto nivel
+- **User Service**: Fachada del dominio que expone operaciones de alto nivel
 - **Modelos de dominio**: Entidades y reglas de negocio
 
 #### 4. **Adaptadores de Salida** (Futuro)
@@ -69,8 +69,8 @@ Este proyecto implementa **Arquitectura Hexagonal** (también conocida como Port
 
 1. **Request HTTP** → `routes/health.py` o `routes/status.py`
 2. **Adaptador** → `facade.py` (Fachada de Aplicación)
-3. **Fachada** → `domain/system_service.py` (Fachada de Dominio)
-4. **Dominio** → `domain/system.py` (Lógica de negocio)
+3. **Fachada** → `domain/user_service.py` (Fachada de Dominio)
+4. **Dominio** → `domain/user.py` (Lógica de negocio)
 5. **Response** ← Se devuelve por el mismo camino
 
 ## Estructura del proyecto
@@ -156,31 +156,6 @@ Consejos:
  
 El proyecto centraliza la lógica de orquestación en una *Fachada de Aplicación* (`src/adapters/api/facade.py`). Las rutas HTTP actúan como adaptadores de entrada y delegan en la fachada, que a su vez llama al Dominio (`src/domain/`).
 
-Ejemplo sencillo:
-
-`src/adapters/api/routes/status.py`:
-
-```python
-from src.adapters.api.facade import api_facade
-
-@router.get('/status')
-async def get_system_status_route():
-    return api_facade.get_status()
-```
-
-`src/adapters/api/facade.py` (esquema):
-
-```python
-class ApplicationFacade:
-    def get_status(self) -> dict:
-        return system_service.get_system_status(
-            project_name=settings.PROJECT_NAME,
-            environment=settings.ENVIRONMENT,
-        )
-
-api_facade = ApplicationFacade()
-```
-
 Beneficios:
 
 - Rutas limpias y sin lógica de negocio.
@@ -198,14 +173,14 @@ Este proyecto contiene dos tipos principales de pruebas:
 
 Ubicación en el repo:
 
-- Tests unitarios: `tests/domain/` — verifican la lógica del dominio (ej.: `test_system.py`, `test_system_service.py`).
-- Tests de aceptación: `tests/acceptance/` — contiene `features/` (Gherkin) y `steps/` con los step-implementations (p. ej. `test_status_steps.py`).
+- Tests unitarios: `tests/domain/` — verifican la lógica del dominio.
+- Tests de aceptación: `tests/acceptance/` — contiene `features/` (Gherkin) y `steps/` con los step-implementations.
 
 Cómo están configurados y por qué es correcto
 
 - `pytest.ini` configura `pythonpath = src` para que los tests puedan importar `src.*` sin manipular `sys.path`. Esto es correcto para un proyecto donde `src` contiene el paquete de la aplicación.
 - `testpaths = tests` centraliza la búsqueda de tests en la carpeta `tests`.
-- `python_files = test_*.py` hace que pytest descubra archivos que empiezan con `test_` — esto es consistente con los nombres actuales (`test_system.py`, `test_status_steps.py`).
+- `python_files = test_*.py` hace que pytest descubra archivos que empiezan con `test_`
 - `markers = bdd: pruebas BDD con pytest-bdd` declara el marcador BDD (útil para etiquetar y filtrar pruebas BDD en el CI o localmente).
 - `addopts` actualmente incluye opciones para coverage y un umbral mínimo; es adecuado para CI.
 
