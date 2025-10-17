@@ -49,4 +49,4 @@ jobs:
           platforms: linux/amd64
 
       - name: Output image uri
-        run: echo "Image pushed: $IMAGE_URI"
+        run: echo "Image pushed $IMAGE_URI"
