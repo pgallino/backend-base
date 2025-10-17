@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from src.adapters.api.routes import health, user
+from src.adapters.api.routes import health, user, aws
 from src.config import settings
 from src.log import logger
 
@@ -22,3 +22,4 @@ app = FastAPI(
 
 app.include_router(health.router)
 app.include_router(user.router)
+app.include_router(aws.router)
