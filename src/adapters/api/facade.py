@@ -26,6 +26,9 @@ class ApplicationFacade:
             "environment": settings.ENVIRONMENT,
         }
 
+    def aws_check(self) -> dict:
+        return {"aws": "aws deploya ok"}
+
     def get_user(self) -> dict:
         """Obtiene un usuario de ejemplo delegando a UserService."""
         user = user_service.get_user(
