@@ -43,7 +43,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          # tags en forma de lista inline (esto evita problemas del validador)
+          # lista inline para tags (evita errores de parsing)
           tags: ["${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest"]
           platforms: linux/amd64
 
