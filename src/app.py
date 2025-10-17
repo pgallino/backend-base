@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from src.adapters.api.routes import health, user, aws
+from src.adapters.api.routes import aws, health, user
 from src.config import settings
 from src.log import logger
 
