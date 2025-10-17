@@ -14,7 +14,6 @@ jobs:
     env:
       AWS_REGION: us-east-1
       ECR_REPOSITORY: backend-base
-      IMAGE_URI: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/backend-base:latest
 
     steps:
       - name: Checkout repository
@@ -44,9 +43,12 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags:
-            - ${{ env.IMAGE_URI }}
+          # tags en forma de lista inline (esto evita problemas del validador)
+          tags: ["${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest"]
           platforms: linux/amd64
 
       - name: Output image uri
-        run: echo "Image pushed $IMAGE_URI"
+        env:
+          IMAGE_URI: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
+        run: |
+          echo "Image pushed: $IMAGE_URI"
