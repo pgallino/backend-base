@@ -43,8 +43,9 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          # lista inline para tags (evita errores de parsing)
-          tags: ["${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest"]
+          # Sintaxis corregida para un solo tag (como string)
+          tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
+          # Sintaxis corregida para platforms (como string)
           platforms: linux/amd64
 
       - name: Output image uri
