@@ -1,15 +1,10 @@
-name: Build and push Docker image to ECR (triggered after tests)
+name: Build and push Docker image to ECR (manual)
 
 on:
-  workflow_run:
-    workflows:
-      - "Code Quality Checks - Tests"
-    types:
-      - completed
+  workflow_dispatch: {}
 
 jobs:
-  deploy-after-tests:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+  deploy-manual:
     runs-on: ubuntu-latest
     env:
       AWS_REGION: us-east-1
@@ -43,13 +38,11 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          # Sintaxis corregida para un solo tag (como string)
-          tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
-          # Sintaxis corregida para platforms (como string)
+          tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
           platforms: linux/amd64
 
       - name: Output image uri
         env:
-          IMAGE_URI: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
+          IMAGE_URI: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
         run: |
           echo "Image pushed: $IMAGE_URI"

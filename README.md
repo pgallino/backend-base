@@ -305,3 +305,35 @@ SECRET_KEY=<valor-secreto>
 - Añadir migraciones con Alembic para DB relacional.
 - Añadir tests de integración con una DB real en CI.
 - Configurar logging estructurado y métricas para producción.
+ 
+## Ejecutar despliegues manualmente (GitHub Actions)
+
+Los workflows de despliegue para Render y AWS están incluidos en el repositorio pero están configurados para ejecutarse manualmente desde la interfaz de GitHub (Actions → seleccionar workflow → Run workflow).
+
+Por qué: esto evita despliegues automáticos accidentales.
+
+Workflows relevantes:
+
+- `.github/workflows/deploy-render.yml` — dispara un deploy en Render usando la API. Activador: `workflow_dispatch` (manual).
+- `.github/workflows/deploy-aws.yml` — construye y sube la imagen a Amazon ECR y puede integrarse con App Runner. Activador: `workflow_dispatch` (manual).
+
+Secrets necesarios (añadir en GitHub → Settings → Secrets):
+
+- Para Render:
+    - `RENDER_API_KEY`
+    - `RENDER_SERVICE_ID`
+    - `RENDER_URL` (opcional, usado para health-check)
+
+- Para AWS / ECR / App Runner:
+    - `AWS_ACCESS_KEY_ID`
+    - `AWS_SECRET_ACCESS_KEY`
+    - `AWS_REGION` (por ejemplo `us-east-1`)
+    - `AWS_ACCOUNT_ID`
+    - `ECR_REPOSITORY` (nombre del repo en ECR, p.ej. `backend-base`)
+
+Ejecutar un deploy manual (ejemplo):
+
+1. Ve a GitHub → Actions → selecciona "Deploy to Render" o "Build and push Docker image to ECR (manual)".
+2. Haz clic en "Run workflow" y, si corresponde, rellena inputs (si el workflow los requiere).
+
+Si necesitas que los despliegues se disparen automáticamente tras la finalización exitosa de la CI, puedo cambiar `deploy-render.yml` para usar `workflow_run` y que se ejecute sólo cuando `main.yml` termine correctamente.
