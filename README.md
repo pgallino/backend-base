@@ -300,6 +300,68 @@ SECRET_KEY=<valor-secreto>
 
 ---
 
+
+## Configuración de URLs de base de datos
+
+
+### Producción y bases externas (ejemplo: Postgres)
+
+En producción, normalmente tienes una sola URL de base de datos (por ejemplo, Postgres):
+
+```
+POSTGRES_URL=postgresql://user:pass@host:port/dbname
+```
+
+Debes definir dos variables de entorno, ambas apuntando a la misma base pero con el prefijo adecuado:
+
+- **Para migraciones Alembic (sincrónico):**
+    - `DB_URL_SYNC=postgresql://user:pass@host:port/dbname`
+- **Para la app y los tests (asíncrono):**
+    - `DB_URL_ASYNC=postgresql+asyncpg://user:pass@host:port/dbname`
+
+**Migraciones en producción:**
+
+Ejecuta Alembic usando la variable sincrónica:
+
+```bash
+DB_URL_SYNC=postgresql://user:pass@host:port/dbname alembic upgrade head
+```
+
+O define la variable en el entorno antes de correr el comando.
+
+**La app en producción:**
+
+Usa la variable asíncrona para inicializar el motor async.
+
+Esto permite que tanto migraciones como la app usen la misma base, pero con el motor adecuado.
+
+
+- **Migraciones Alembic:**
+    - Usa la variable `DB_URL_SYNC` (ejemplo: `sqlite:///dev.db`)
+    - Alembic solo soporta motores sincrónicos, por eso esta URL debe ser sincrónica.
+
+- **Aplicación y tests:**
+    - Usa la variable `DB_URL_ASYNC` (ejemplo: `sqlite+aiosqlite:///dev.db`)
+    - La app y los repositorios usan SQLAlchemy async, que requiere el motor asíncrono.
+
+En el workflow de CI/CD y en local, define ambas variables:
+
+```env
+DB_URL_SYNC=sqlite:///dev.db      # Para migraciones Alembic
+DB_URL_ASYNC=sqlite+aiosqlite:///dev.db  # Para la app y los tests
+```
+
+Ejemplo en GitHub Actions:
+
+```yaml
+env:
+    DB_URL_SYNC: sqlite:///dev.db
+    DB_URL_ASYNC: sqlite+aiosqlite:///dev.db
+```
+
+Tu código debe leer la variable adecuada según el contexto (sincrónico para migraciones, asíncrono para la app/tests).
+
+---
 ## Recomendaciones y próximos pasos
 
 - Añadir migraciones con Alembic para DB relacional.
