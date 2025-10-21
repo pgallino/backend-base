@@ -16,3 +16,9 @@ pytest-cov
 pytest-bdd
 httpx
 pytest-pythonpath
+pytest-asyncio
+
+# ORM y migraciones
+SQLAlchemy>=2.0
+aiosqlite
+alembic

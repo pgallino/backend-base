@@ -21,6 +21,27 @@ shell: up
 	docker compose exec backend sh
 
 
+
+# --- Migraciones Alembic ---
+
+ifeq ($(shell uname), Linux)
+PYTHONPATH_VAR=PYTHONPATH=/app
+else
+PYTHONPATH_VAR=PYTHONPATH=$(PWD)
+endif
+
+alembic-init:
+	$(PYTHONPATH_VAR) alembic init alembic
+
+alembic-migrate:
+	$(PYTHONPATH_VAR) alembic revision --autogenerate -m "Nueva migracion"
+
+alembic-upgrade:
+	$(PYTHONPATH_VAR) alembic upgrade head
+
+alembic-downgrade:
+	$(PYTHONPATH_VAR) alembic downgrade -1
+
 # --- Comandos para el Contenedor (dentro de la shell) ---
 
 # Inicia el servidor FastAPI con recarga automática
@@ -31,14 +52,14 @@ run:
 # Aplica formato al código (corrige los archivos)
 format:
 	@echo "-> Formateando código con black e isort..."
-	black $(PYTHON_FILES)
 	isort $(PYTHON_FILES)
+	black $(PYTHON_FILES)
 
 # Verifica si el formato es correcto (no corrige, solo avisa)
 format-check:
 	@echo "-> Verificando formato..."
-	black --check $(PYTHON_FILES)
 	isort --check-only $(PYTHON_FILES)
+	black --check $(PYTHON_FILES)
 
 # Chequeo de Tipos Estáticos (Linting con Mypy)
 lint:

@@ -274,7 +274,7 @@ Variables usadas en el workflow (definirlas en GitHub Secrets):
 
 Variables sensibles adicionales que conviene guardar en Secrets:
 
-- `DATABASE_URL` — cadena de conexión para la base de datos en producción.
+- `DB_URL` — cadena de conexión para la base de datos en producción.
 - `SECRET_KEY` — clave secreta para JWT/firmas.
 
 No guardes valores reales en `.env.example`; usa este archivo sólo como referencia.
@@ -294,7 +294,7 @@ PORT=8000
 En producción añade al menos:
 
 ```
-DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/dbname
+DB_URL=postgresql+asyncpg://user:pass@host:5432/dbname
 SECRET_KEY=<valor-secreto>
 ```
 
