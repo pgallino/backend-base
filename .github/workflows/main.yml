@@ -28,17 +28,19 @@ jobs:
         run: make check
 
       - name: Run Alembic migrations
-        run: alembic upgrade head
+        run: make alembic-upgrade
         env:
           PROJECT_NAME: BackendBase
           ENVIRONMENT: test
           DB_URL_SYNC: sqlite:///dev.db
+          DB_URL_ASYNC: sqlite+aiosqlite:///dev.db
 
       - name: Run tests (make test)
         run: make test
         env:
           PROJECT_NAME: BackendBase
           ENVIRONMENT: test
+          DB_URL_SYNC: sqlite:///dev.db
           DB_URL_ASYNC: sqlite+aiosqlite:///dev.db
       - name: Upload coverage report (artifact)
         uses: actions/upload-artifact@v4
