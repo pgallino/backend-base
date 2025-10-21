@@ -24,11 +24,7 @@ shell: up
 
 # --- Migraciones Alembic ---
 
-ifeq ($(shell uname), Linux)
-PYTHONPATH_VAR=PYTHONPATH=/app
-else
-PYTHONPATH_VAR=PYTHONPATH=$(PWD)
-endif
+PYTHONPATH_VAR=PYTHONPATH=$(shell python -c "import os; print(os.getcwd())")
 
 alembic-init:
 	$(PYTHONPATH_VAR) alembic init alembic
