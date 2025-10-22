@@ -22,3 +22,5 @@ pytest-asyncio
 SQLAlchemy>=2.0
 aiosqlite
 alembic
+psycopg[binary]
+asyncpg
