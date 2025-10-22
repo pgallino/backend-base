@@ -1,0 +1,114 @@
+openapi: 3.0.3
+info:
+  title: Backend Base API
+  version: "0.1.0"
+  description: API minimal for Backend Base template (health + user endpoints)
+servers:
+  - url: http://localhost:8000
+paths:
+  /:
+    get:
+      summary: Health check
+      tags:
+        - health
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  project_name:
+                    type: string
+                  environment:
+                    type: string
+                example:
+                  project_name: BackendBase
+                  environment: dev
+  /user/{user_id}:
+    get:
+      summary: Get user profile
+      tags:
+        - user
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  detail: User not found
+  /user:
+    post:
+      summary: Create user
+      tags:
+        - user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+            example:
+              username: pedro
+              name: Pedro Example
+              email: pedro@example.com
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+      example:
+        id: 1
+        username: pedro
+        name: Pedro Example
+        email: pedro@example.com
+    UserCreateRequest:
+      type: object
+      required:
+        - username
+        - name
+        - email
+      properties:
+        username:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+      example:
+        username: pedro
+        name: Pedro Example
+        email: pedro@example.com
