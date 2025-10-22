@@ -27,12 +27,24 @@ def _sanitize_async_url_and_connect_args(db_url: str):
         return db_url, {}
 
     qs = dict(parse_qsl(parsed.query, keep_blank_values=True))
+
+    # Remove known unsupported keys for asyncpg connect
+    # asyncpg.connect does not accept 'channel_binding' nor 'sslmode'
     sslmode = None
-    # support both lowercase and uppercase keys just in case
     for key in ("sslmode", "SSL_MODE", "ssl_mode"):
         if key in qs:
             sslmode = qs.pop(key)
             break
+
+    # Remove channel_binding if present (e.g. channel_binding=prefer)
+    for cb_key in (
+        "channel_binding",
+        "channel-binding",
+        "channelBinding",
+        "CHANNEL_BINDING",
+    ):
+        if cb_key in qs:
+            qs.pop(cb_key, None)
 
     if sslmode is None:
         return db_url, {}
