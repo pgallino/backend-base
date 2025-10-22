@@ -46,23 +46,25 @@ def _sanitize_async_url_and_connect_args(db_url: str):
         if cb_key in qs:
             qs.pop(cb_key, None)
 
-    if sslmode is None:
-        return db_url, {}
-
-    # rebuild URL without sslmode
+    # rebuild URL without the removed keys
     new_query = urlencode(qs, doseq=True)
     sanitized = urlunparse(parsed._replace(query=new_query))
 
     # Map sslmode values to an SSLContext (asyncpg expects 'ssl')
     ssl_arg: Union[bool, ssl.SSLContext, None] = None
-    if sslmode.lower() == "disable":
-        ssl_arg = False
-    else:
-        # create a default SSL context which enforces cert verification
-        ctx = ssl.create_default_context()
-        ssl_arg = ctx
+    # sslmode may be None; only call .lower() when it's a str
+    if isinstance(sslmode, str):
+        if sslmode.lower() == "disable":
+            ssl_arg = False
+        else:
+            # create a default SSL context which enforces cert verification
+            ctx = ssl.create_default_context()
+            ssl_arg = ctx
 
-    return sanitized, {"ssl": ssl_arg}
+    # If ssl_arg is None we return an empty connect_args dict
+    connect_args: Dict[str, Any] = {"ssl": ssl_arg} if ssl_arg is not None else {}
+
+    return sanitized, connect_args
 
 
 sanitized_url, _connect_args = _sanitize_async_url_and_connect_args(DB_URL)
