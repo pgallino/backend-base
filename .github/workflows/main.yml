@@ -1,33 +1,45 @@
-# Nombre del Workflow (aparece en GitHub)
 name: Code Quality Checks - Tests
 
-# Define cuándo se ejecuta el workflow
 on:
   push:
-    branches: [ main ] # Se ejecuta en cada push a la rama principal
+    branches: [ main ]
   pull_request:
-    branches: [ main ] # Se ejecuta en cada PR hacia la rama principal
+    branches: [ main ]
 
 jobs:
-  check-quality:
-    name: Checks + Tests
+  ci:
+    name: Full pipeline (format, migrations, tests)
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Code
+      # 1️⃣ Descargar el código
+      - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2️⃣ Configurar Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12' 
+          python-version: '3.12'
 
+      # 3️⃣ Cachear dependencias pip
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      # 4️⃣ Instalar dependencias
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run format & types (make check)
+      # 5️⃣ Verificar formato y tipos
+      - name: Format & type checks
         run: make check
 
-      - name: Run Alembic migrations
+      # 6️⃣ Ejecutar migraciones (necesario antes de los tests)
+      - name: Apply Alembic migrations
         run: make alembic-upgrade
         env:
           PROJECT_NAME: BackendBase
@@ -35,16 +47,18 @@ jobs:
           DB_URL_SYNC: sqlite:///dev.db
           DB_URL_ASYNC: sqlite+aiosqlite:///dev.db
 
-      - name: Run tests (make test)
+      # 7️⃣ Ejecutar tests (ya con la base migrada)
+      - name: Run tests
         run: make test
         env:
           PROJECT_NAME: BackendBase
           ENVIRONMENT: test
           DB_URL_SYNC: sqlite:///dev.db
           DB_URL_ASYNC: sqlite+aiosqlite:///dev.db
-      - name: Upload coverage report (artifact)
+
+      # 8️⃣ Subir reporte de coverage
+      - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-xml
           path: coverage.xml
-  
