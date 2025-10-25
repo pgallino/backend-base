@@ -4,10 +4,18 @@ on:
   workflow_dispatch: {}
 
 jobs:
+  # 1. Llamar al workflow de Migraciones (Neon)
+  run-neon-migrations:
+      name: Run Migrations on Neon
+      uses: ./.github/workflows/deploy-neon.yml
+      secrets:
+        NEON_DB_SYNC: ${{ secrets.NEON_DB_SYNC }}
+
+  # 2. Ejecutar Despliegue Render (Depende de Neon)
   deploy-render:
     name: Deploy to Render
     runs-on: ubuntu-latest
-    needs: []
+    needs: [run-neon-migrations] # Asegura que Neon se ejecute primero
     steps:
       - name: Checkout
         uses: actions/checkout@v4

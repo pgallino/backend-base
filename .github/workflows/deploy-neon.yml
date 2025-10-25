@@ -1,12 +1,12 @@
-name: Deploy to Neon (manual)
+# deploy-neon.yml
+
+name: Run Alembic Migrations on Neon
 
 on:
-  workflow_dispatch:
-    inputs:
-      env:
-        description: 'Environment label (e.g. production)'
-        required: false
-        default: 'production'
+  workflow_call:
+    secrets:
+      NEON_DB_SYNC:
+        required: true # Aseguramos que el caller lo pase
 
 jobs:
   migrate:
@@ -27,6 +27,6 @@ jobs:
       - name: Run migrations
         run: make alembic-upgrade
         env:
-          ENVIRONMENT: ${{ github.event.inputs.env }}
+          ENVIRONMENT: production
           PROJECT_NAME: BackendBase
           DB_URL_SYNC: ${{ secrets.NEON_DB_SYNC }}
