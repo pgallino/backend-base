@@ -62,3 +62,10 @@ jobs:
         with:
           name: coverage-xml
           path: coverage.xml
+
+      # 9️⃣ Procesar y mostrar el reporte de coverage
+      - name: Code Coverage Report
+        uses: irongut/CodeCoverageSummary@v1.4.0
+        with:
+          filename: coverage.xml
+          badge: true
