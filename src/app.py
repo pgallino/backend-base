@@ -22,21 +22,43 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware: añade orígenes permitidos aquí
-origins = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    # agrega aquí el origen de tu frontend desplegado si corresponde, p.e.
-    "https://pgallino.github.io/backend-base-front/",
-    # Si solo debugueas puedes usar "*" (no recomendado en producción)
-]
+# CORS middleware: read allowed origins from settings.ALLOWED_ORIGINS (env var)
+raw = getattr(settings, "ALLOWED_ORIGINS", "") or ""
+origins = []
+if raw:
+    ra = raw.strip()
+    if ra.startswith("["):
+        try:
+            import json
+
+            origins = json.loads(ra)
+        except Exception:
+            origins = [o.strip() for o in ra.strip("[]").split(",") if o.strip()]
+    else:
+        origins = [o.strip() for o in ra.split(",") if o.strip()]
+
+# If no origins configured:
+# - in non-production we allow localhost for convenience
+# - in production we intentionally keep origins empty and log a warning so
+#   the deploy must explicitly set ALLOWED_ORIGINS (safer than allowing '*')
+if not origins:
+    if settings.ENVIRONMENT != "production":
+        origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    else:
+        # In production, prefer failing closed (no allowed origins) and log
+        logger.warning(
+            "ALLOWED_ORIGINS is not set and ENVIRONMENT=production. "
+            "CORS will not allow browser origins until ALLOWED_ORIGINS is configured."
+        )
+        origins = []
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],  # permite OPTIONS, GET, POST, PUT, DELETE...
-    allow_headers=["*"],  # permite Content-Type, Authorization, etc.
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "Accept"],
+    max_age=3600,
 )
 
 app.include_router(health.router)  # type: ignore
