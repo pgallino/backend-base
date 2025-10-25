@@ -27,7 +27,7 @@ origins = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     # agrega aquí el origen de tu frontend desplegado si corresponde, p.e.
-    # "https://pgallino.github.io/backend-base-front/",
+    "https://pgallino.github.io/backend-base-front/",
     # Si solo debugueas puedes usar "*" (no recomendado en producción)
 ]
 
