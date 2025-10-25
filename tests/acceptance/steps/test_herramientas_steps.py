@@ -1,10 +1,6 @@
 import json
-import pytest
 from pytest_bdd import scenarios, given, when, then, parsers
 from fastapi.testclient import TestClient
-from src.adapters.api.facade_instance import api_facade
-
-from src.config import settings
 
 scenarios("../features/herramientas.feature")
 

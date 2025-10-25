@@ -20,12 +20,15 @@ class SqlAlchemyToolRepository(ToolRepository):
                     id=getattr(row, "id"),
                     name=getattr(row, "name"),
                     description=getattr(row, "description"),
+                    link=getattr(row, "link"),
                 )
             return None
 
     async def create(self, tool: Tool) -> Tool:
         async with AsyncSessionLocal() as session:
-            model = ToolModel(name=tool.name, description=tool.description)
+            model = ToolModel(
+                name=tool.name, description=tool.description, link=tool.link
+            )
             session.add(model)
             await session.commit()
             await session.refresh(model)
@@ -33,6 +36,7 @@ class SqlAlchemyToolRepository(ToolRepository):
                 id=getattr(model, "id"),
                 name=getattr(model, "name"),
                 description=getattr(model, "description"),
+                link=getattr(model, "link"),
             )
 
     async def list_all(self) -> list[Tool]:
@@ -46,6 +50,7 @@ class SqlAlchemyToolRepository(ToolRepository):
                         id=getattr(row, "id"),
                         name=getattr(row, "name"),
                         description=getattr(row, "description"),
+                        link=getattr(row, "link"),
                     )
                 )
             return tools

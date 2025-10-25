@@ -12,12 +12,15 @@ router = APIRouter(tags=["herramientas"])  # Spanish path tag
 class ToolCreateRequest(BaseModel):
     name: str
     description: str | None = None
+    link: str | None = None
 
 
 @router.post("/herramientas", response_model=None, status_code=status.HTTP_201_CREATED)
 async def create_tool_route(request: ToolCreateRequest):
     tool = await api_facade.create_tool(
-        name=request.name, description=request.description or ""
+        name=request.name,
+        description=request.description or "",
+        link=request.link or "",
     )
     return JSONResponse(content=asdict(tool), status_code=status.HTTP_201_CREATED)
 

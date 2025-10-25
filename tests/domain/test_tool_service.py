@@ -27,7 +27,7 @@ async def test_tool_service_create_and_get_and_list():
     repo = FakeToolRepository()
     service = ToolService(tool_repository=repo)
 
-    created = await service.create_tool("fastapi", "web framework")
+    created = await service.create_tool("fastapi", "web framework", "")
     assert created.id == 1
     assert created.name == "fastapi"
 
@@ -46,6 +46,6 @@ async def test_tool_service_no_repository_error():
     with pytest.raises(RuntimeError):
         await service.get_tool(1)
     with pytest.raises(RuntimeError):
-        await service.create_tool("n", "d")
+        await service.create_tool("n", "d", "")
     with pytest.raises(RuntimeError):
         await service.list_tools()

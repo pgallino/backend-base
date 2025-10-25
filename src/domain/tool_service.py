@@ -15,10 +15,10 @@ class ToolService:
             raise RuntimeError("No hay repositorio de tool configurado")
         return await self.tool_repository.get_by_id(tool_id)
 
-    async def create_tool(self, name: str, description: str) -> Tool:
+    async def create_tool(self, name: str, description: str, link: str) -> Tool:
         if self.tool_repository is None:
             raise RuntimeError("No hay repositorio de tool configurado")
-        tool = Tool(id=0, name=name, description=description)
+        tool = Tool.from_input(name=name, description=description, link=link)
         return await self.tool_repository.create(tool)
 
     async def list_tools(self) -> list[Tool]:
