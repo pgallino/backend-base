@@ -4,7 +4,7 @@ info:
   version: "0.1.0"
   description: API minimal for Backend Base template (health + user endpoints)
 servers:
-  - url: http://localhost:8000
+  - url: https://backend-base-53l1.onrender.com
 paths:
   /:
     get:
@@ -77,6 +77,69 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+  /herramientas:
+    post:
+      summary: Create tool
+      tags:
+        - herramientas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToolCreateRequest'
+            example:
+              name: fastapi
+              description: web framework
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tool'
+    get:
+      summary: List tools
+      tags:
+        - herramientas
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tool'
+  /herramientas/{tool_id}:
+    get:
+      summary: Get tool by id
+      tags:
+        - herramientas
+      parameters:
+        - in: path
+          name: tool_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Tool found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tool'
+        '404':
+          description: Tool not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                example:
+                  detail: Tool not found
 components:
   schemas:
     User:
@@ -112,3 +175,28 @@ components:
         username: pedro
         name: Pedro Example
         email: pedro@example.com
+    Tool:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+      example:
+        id: 1
+        name: fastapi
+        description: web framework
+    ToolCreateRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+      example:
+        name: fastapi
+        description: web framework
