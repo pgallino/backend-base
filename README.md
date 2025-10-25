@@ -1,401 +1,325 @@
-# Backend Base
+# 🧩 backend-base — Plantilla profesional para APIs con FastAPI y SQLAlchemy
 
-Plantilla base para construir APIs REST con FastAPI usando Arquitectura Hexagonal (Ports & Adapters). A continuación encontrarás explicación de las tecnologías, guía de desarrollo, arquitectura de la fachada, tests, comandos Make, Docker, CI/CD y recomendaciones sobre secrets.
+> **Arquitectura hexagonal (Ports & Adapters) · Base de datos integrada · Migraciones Alembic · Tests BDD y CI/CD listos**
 
-## Tabla de contenidos
-
-- [Arquitectura](#arquitectura)
-- [Estructura del proyecto](#estructura-del-proyecto)
-- [Tecnologias y herramientas](#tecnologias-y-herramientas)
-- [Como desarrollar](#como-desarrollar)
-- [Arquitectura - Fachada](#arquitectura---fachada)
-- [Tests](#tests)
-- [Makefile](#makefile)
-- [Docker](#docker)
-- [CI/CD y deploy automatico](#cicd-y-deploy-automatico)
-- [.env / .env.example](#env--envexample)
-- [Recomendaciones y proximos pasos](#recomendaciones-y-proximos-pasos)
-
-## Arquitectura
-
-Este proyecto implementa **Arquitectura Hexagonal** (también conocida como Ports & Adapters), que separa la lógica de negocio de los detalles de infraestructura.
-
-### Capas de la Arquitectura
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    ADAPTADORES DE ENTRADA                   │
-│              (API Routes, CLI, Web UI, etc.)               │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────────────┐
-│                   FACHADA DE APLICACIÓN                    │
-│            (Orquestación y Coordinación)                   │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────────────┐
-│                      DOMINIO                               │
-│              (Lógica de Negocio Pura)                      │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-┌─────────────────────▼───────────────────────────────────────┐
-│                  ADAPTADORES DE SALIDA                     │
-│              (DB, APIs Externas, etc.)                     │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Componentes Principales
-
-#### 1. **Adaptadores de Entrada** (`src/adapters/api/`)
-- **Responsabilidad**: Reciben requests externos y los adaptan al dominio
-- **Rutas HTTP**: Cada endpoint está en su propio archivo en `routes/`
-- **Sin lógica de negocio**: Solo validación de entrada y formateo de respuesta
-
-#### 2. **Fachada de Aplicación** (`src/adapters/api/facade.py`)
-- **Responsabilidad**: Punto de entrada único para todos los adaptadores
-- **Orquestación**: Coordina llamadas entre dominio y adaptadores de salida
-- **Manejo de dependencias**: Inyecta configuración e infraestructura al dominio
-
-#### 3. **Dominio** (`src/domain/`)
-- **Lógica de negocio pura**: Sin dependencias de infraestructura
-- **User Service**: Fachada del dominio que expone operaciones de alto nivel
-- **Modelos de dominio**: Entidades y reglas de negocio
-
-#### 4. **Adaptadores de Salida** (Futuro)
-- Base de datos, APIs externas, servicios de terceros
-- Implementan interfaces definidas por el dominio
-
-### Flujo de Datos
-
-1. **Request HTTP** → `routes/health.py` o `routes/status.py`
-2. **Adaptador** → `facade.py` (Fachada de Aplicación)
-3. **Fachada** → `domain/user_service.py` (Fachada de Dominio)
-4. **Dominio** → `domain/user.py` (Lógica de negocio)
-5. **Response** ← Se devuelve por el mismo camino
-
-## Estructura del proyecto
-
-```
-backend-base/
-├── src/                           # Código fuente principal
-│   ├── __init__.py               # Hace que src sea un paquete Python
-│   ├── app.py                    # Configuración principal de FastAPI
-│   ├── config.py                 # Configuración de la aplicación
-│   ├── log.py                    # Configuración de logging
-│   │
-│   ├── adapters/                 # ADAPTADORES (Capa Externa)
-│   │   ├── __init__.py
-│   │   └── api/                  # Adaptadores de entrada HTTP
-│   │       ├── __init__.py
-│   │       ├── facade.py         # Fachada de Aplicación
-│   │       └── routes/           # Rutas HTTP organizadas por funcionalidad
-│   │           ├── __init__.py
-```
+<p align="center">
+  <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python version" />
+  <img src="https://img.shields.io/badge/FastAPI-0.115%2B-009688?logo=fastapi" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/SQLAlchemy-async-orange?logo=python" alt="SQLAlchemy async" />
+  <img src="https://img.shields.io/badge/Alembic-migrations-yellow" alt="Alembic" />
+  <img src="https://img.shields.io/badge/tests-pytest%20%2B%20BDD-green?logo=pytest" alt="Testing" />
+  <img src="https://img.shields.io/badge/docker-ready-2496ED?logo=docker" alt="Docker" />
+<img src="https://github.com/pgallino/backend-base/actions/workflows/main.yml/badge.svg?branch=main" alt="GitHub Actions CI" />
+  <img src="https://img.shields.io/badge/license-MIT-lightgrey" alt="License MIT" />
+</p>
 
 ---
 
-## Tecnologias y herramientas
+## 📚 Índice
 
-- Python 3.12 — lenguaje principal; usaremos tipado estático con mypy.
-- FastAPI — framework ASGI para endpoints y documentación automática (OpenAPI/Swagger).
-- Uvicorn — servidor ASGI para ejecutar la app.
-- pydantic / pydantic-settings — validación de datos y gestión de configuración desde `.env`.
-- Docker & Docker Compose — reproducibilidad del entorno y facilitan CI/CD.
-- pytest / pytest-bdd — testing unitario y pruebas de aceptación (BDD).
-- black, isort, mypy — formateo y chequeo estático de tipos.
-- Render (ejemplo) — plataforma de despliegue utilizada en el workflow de ejemplo.
+1. [Resumen](#-resumen)
+2. [Arquitectura](#-arquitectura)
+3. [Estructura del proyecto](#-estructura-del-proyecto)
+4. [Requisitos y stack](#-requisitos-y-stack)
+5. [Configuración y entorno](#-configuración-y-entorno)
+6. [Base de datos y migraciones](#-base-de-datos-y-migraciones)
+7. [Ejecución en desarrollo](#-ejecución-en-desarrollo)
+8. [Pruebas (TDD y BDD)](#-pruebas-tdd-y-bdd)
+9. [Makefile y comandos útiles](#-makefile-y-comandos-útiles)
+10. [CI/CD y despliegue](#-cicd-y-despliegue)
+11. [Reutilización y buenas prácticas](#-reutilización-y-buenas-prácticas)
 
 ---
 
-## Como desarrollar
+## 🚀 Resumen
 
-1. Clonar el repositorio y posicionarse en la carpeta:
+`backend-base` es una plantilla profesional para construir **backends escalables en Python**, con **FastAPI**, **SQLAlchemy asíncrono** y **Alembic** para la gestión de base de datos.
+
+Sigue los principios de **Arquitectura Hexagonal (Ports & Adapters)**, garantizando una separación clara entre dominio, infraestructura y orquestación.
+
+Incluye configuración lista para **tests unitarios y de aceptación (BDD)**, y ejemplos de **despliegue con Docker, Render y AWS**.
+
+### 🎯 Objetivo
+Proporcionar una base sólida, extensible y educativa para proyectos reales, enfocada en:
+
+- Diseño limpio y mantenible (DDD + Hexagonal)
+- Tests integrados desde el inicio (unit + BDD)
+- Configuración y despliegue reproducibles con Docker
+- Separación clara entre dominio, adaptadores y orquestación
+
+---
+
+## 🧱 Arquitectura
+
+El proyecto implementa una **Arquitectura Hexagonal (Ports & Adapters)**, donde cada capa tiene una responsabilidad bien definida.
+
+```text
+Cliente HTTP
+   ↓
+[Adaptador de entrada] — FastAPI (rutas, validación Pydantic)
+   ↓
+[Fachada de aplicación] — coordina lógica de dominio y persistencia
+   ↓
+[Dominio] — entidades y servicios puros de negocio
+   ↓
+[Adaptador de salida] — repositorios SQLAlchemy async
+   ↓
+Base de datos (SQLite / Postgres)
+```
+
+### Capas principales
+
+- **Adaptadores de entrada:** reciben peticiones HTTP, validan con Pydantic y delegan a la fachada.
+- **Fachada de aplicación:** orquesta la interacción entre dominio y repositorios.
+- **Dominio:** contiene entidades y reglas de negocio puras, sin dependencias externas.
+- **Adaptadores de salida:** implementan la persistencia mediante SQLAlchemy async.
+- **Infraestructura:** configuración, migraciones, logging, etc.
+
+Esta separación facilita el testing, la evolución del código y la independencia del framework o base de datos.
+
+---
+
+## 🗂️ Estructura del proyecto
 
 ```bash
-git clone <repo-url>
-cd backend-base
+src/
+├── app.py                  # Punto de entrada (FastAPI)
+├── config.py               # Configuración central
+├── adapters/
+│   ├── api/                # Endpoints + fachada
+│   └── db/                 # Modelos y repositorios SQLAlchemy
+├── domain/                 # Entidades y servicios de dominio
+alembic/                    # Migraciones de esquema
+tests/                      # Tests unitarios y BDD
 ```
 
-2. Copiar el ejemplo de variables y ajustar localmente:
+---
+
+## 💻 Requisitos y stack
+
+- Python **3.11+** (preparado para 3.12)
+- **FastAPI** — framework principal
+- **SQLAlchemy async** — ORM asíncrono
+- **Alembic** — migraciones de base de datos
+- **pytest + pytest-bdd** — testing unitario y de aceptación
+- **Docker Compose** — entorno reproducible
+- **GitHub Actions** — CI/CD de ejemplo
+
+---
+
+## ⚙️ Configuración y entorno
+
+El proyecto usa un archivo `.env` para variables de entorno. Ejemplo (`.env.example`):
 
 ```bash
-cp .env.example .env
-# editar .env con tus valores si hace falta
-```
-
-3. Levantar el entorno y entrar a la shell del contenedor:
-
-- PowerShell (manual):
-
-```powershell
-docker compose up -d --build
-docker compose exec backend sh
-```
-
-- Git Bash / WSL (script):
-
-```bash
-bash ./scripts/enter_dev.sh
-```
-
-4. Dentro del contenedor, iniciar el servidor (si no arrancó automáticamente):
-
-```bash
-make run
-```
-
-5. Acceder a `http://localhost:8000` y a `http://localhost:8000/docs`.
-
-Consejos:
-- Edita el código en el host; los cambios se reflejan inmediatamente por el volume `.:/app`.
-- Usa `make check` para validar formato y tipos antes de commitear.
-
----
-
-## Arquitectura - Fachada
- 
-El proyecto centraliza la lógica de orquestación en una *Fachada de Aplicación* (`src/adapters/api/facade.py`). Las rutas HTTP actúan como adaptadores de entrada y delegan en la fachada, que a su vez llama al Dominio (`src/domain/`).
-
-Beneficios:
-
-- Rutas limpias y sin lógica de negocio.
-- La fachada es el único lugar que conoce cómo componer servicios del dominio.
-- Facilita testing unitario de dominio y testing de integración de adaptadores.
-
----
-
-## Tests
-
-Este proyecto contiene dos tipos principales de pruebas:
-
-- Tests unitarios (unidad): se enfocan en funciones y clases del dominio sin dependencias externas.
-- Tests de aceptación (BDD): prueban el comportamiento desde la perspectiva del usuario/cliente, usando escenarios escritos en formato Gherkin (archivos `.feature`) y pasos definidos con `pytest-bdd`.
-
-Ubicación en el repo:
-
-- Tests unitarios: `tests/domain/` — verifican la lógica del dominio.
-- Tests de aceptación: `tests/acceptance/` — contiene `features/` (Gherkin) y `steps/` con los step-implementations.
-
-Cómo están configurados y por qué es correcto
-
-- `pytest.ini` configura `pythonpath = src` para que los tests puedan importar `src.*` sin manipular `sys.path`. Esto es correcto para un proyecto donde `src` contiene el paquete de la aplicación.
-- `testpaths = tests` centraliza la búsqueda de tests en la carpeta `tests`.
-- `python_files = test_*.py` hace que pytest descubra archivos que empiezan con `test_`
-- `markers = bdd: pruebas BDD con pytest-bdd` declara el marcador BDD (útil para etiquetar y filtrar pruebas BDD en el CI o localmente).
-- `addopts` actualmente incluye opciones para coverage y un umbral mínimo; es adecuado para CI.
-
-En resumen: la configuración de `pytest.ini` es correcta para el layout actual del repo y permitirá ejecutar tanto tests unitarios como los de aceptación.
-
-Ejecutar pruebas
-
-- Ejecutar todos los tests y generar cobertura (local):
-    ```bash
-    make test
-    ```
-
-- Ejecutar solo tests unitarios:
-    ```bash
-    make test-unit
-    ```
-
-- Ejecutar solo tests de aceptación (BDD):
-    ```bash
-    make test-acceptance
-    ```
-
-- Ejecutar un escenario específico (BDD) o un step:
-    ```bash
-    pytest tests/acceptance -k "status"
-    ```
-
-Notas prácticas sobre los acceptance tests del repo
-
-- Los acceptance tests definidos usan `fastapi.testclient.TestClient` (sin arrancar un servidor separado). Esto es correcto: TestClient monta la aplicación en memoria y permite realizar peticiones HTTP simuladas rápidamente sin depender de procesos externos.
-- En `tests/acceptance/steps/test_status_steps.py` se usa `scenarios("../features/status.feature")` para cargar las feature files; la ruta relativa está bien (desde `steps/` hacia `features/`).
-- Como los steps devuelven responses del `TestClient`, no necesitas levantar el contenedor para ejecutar los acceptance tests localmente.
-
-Recomendaciones y mejoras
-
-- Mantener `pytest.ini` tal como está. Si en el futuro añades tests que requieren servicios externos (por ejemplo, Postgres), crea un marker o un perfil (`-m integration`) para distinguir tests que necesitan infraestructura de los que no.
-- Considera añadir un objetivo Make como `make test-acceptance` y `make test-unit` (si no lo tienes) para facilitar la ejecución desde la raíz; actualmente los targets existen (`test-unit`, `test-acceptance`).
-- Si sueles ejecutar tests desde el contenedor, asegúrate de que el contenedor tenga las mismas dependencias que tu `requirements.txt` y que `PYTHONPATH` o instalación editable apunten a `src`.
-- Para debugging de BDD: ejecuta `pytest -k <escenario> -s -vv` para ver salida completa y detener buffering.
-
----
-
-En CI se ejecutan `make check` y `make test` (ver `.github/workflows/main.yml`).
-
----
-
-## Makefile (comandos clave)
-
-- `make up` — construye y levanta contenedores (detached): `docker compose up -d --build`.
-- `make down` — detiene y limpia: `docker compose down`.
-- `make shell` — entra en la shell del servicio `backend`.
-- `make run` — arranca uvicorn en `0.0.0.0:8000 --reload`.
-- `make format` / `make format-check` — aplica o verifica `black` + `isort`.
-- `make lint` — ejecuta `mypy`.
-- `make check` — ejecuta `format-check` + `lint`.
-- `make test` — ejecuta tests.
-
-Uso recomendado durante dev: `make shell` → `make run`.
-
----
-
-## Docker (detalle operativo)
-
-- `Dockerfile` genera la imagen basada en `python:3.12-slim`.
-- `docker-compose.yml` define el servicio `backend` con:
-  - puerto `8000:8000`
-  - volumen `.:/app` para hot reload
-  - comando que ejecuta `uvicorn src.app:app --host 0.0.0.0 --port ${PORT:-8000} --reload`
-
-Consejos:
-
-- En producción evita `--reload` y no montes el código como volumen.
-- Si necesitas DB en dev, añade un servicio `postgres` en `docker-compose.yml` y ajusta `DATABASE_URL`.
-
----
-
-## CI/CD y Deploy automático (GitHub Actions → Render)
-
-El workflow en `.github/workflows/main.yml` realiza:
-
-1. Checkout y setup Python.
-2. Instala dependencias y ejecuta `make check` + `make test`.
-3. Si los checks pasan y el push es a `main`, dispara un deploy en Render usando la API.
-4. Hace health-check a la `RENDER_URL` para verificar que el servicio responde.
-
-Variables usadas en el workflow (definirlas en GitHub Secrets):
-
-- `RENDER_API_KEY` — token para la API de Render.
-- `RENDER_SERVICE_ID` — ID del servicio a desplegar.
-- `RENDER_URL` — URL pública para el health check.
-
-Variables sensibles adicionales que conviene guardar en Secrets:
-
-- `DB_URL` — cadena de conexión para la base de datos en producción.
-- `SECRET_KEY` — clave secreta para JWT/firmas.
-
-No guardes valores reales en `.env.example`; usa este archivo sólo como referencia.
-
----
-
-## .env / .env.example (qué variables incluir)
-
-Ejemplo mínimo en `.env.example`:
-
-```
-PROJECT_NAME=BackendBase
 ENVIRONMENT=dev
 PORT=8000
+DB_URL_SYNC=sqlite:///dev.db
+DB_URL_ASYNC=sqlite+aiosqlite:///dev.db
+ALLOWED_ORIGINS=http://localhost:3000
+SECRET_KEY=super-secret-key
 ```
 
-En producción añade al menos:
-
-```
-DB_URL=postgresql+asyncpg://user:pass@host:5432/dbname
-SECRET_KEY=<valor-secreto>
-```
+> ⚠️ **No subas secretos reales al repositorio.** Usa secrets en CI/CD o servicios como Render o AWS.
 
 ---
 
+## 🗄️ Base de datos y migraciones
 
-## Configuración de URLs de base de datos
+Alembic se utiliza para versionar el esquema de la base de datos.
 
+### Alembic
 
-### Producción y bases externas (ejemplo: Postgres)
+Alembic es la herramienta de migrations para SQLAlchemy: permite crear "revisiones" que describen cambios en el esquema (crear tablas, columnas, índices) y aplicarlas de forma ordenada en cualquier entorno. En este proyecto usamos Alembic para mantener el historial del esquema y aplicarlo en CI / despliegues.
 
-En producción, normalmente tienes una sola URL de base de datos (por ejemplo, Postgres):
-
-```
-POSTGRES_URL=postgresql://user:pass@host:port/dbname
-```
-
-Debes definir dos variables de entorno, ambas apuntando a la misma base pero con el prefijo adecuado:
-
-- **Para migraciones Alembic (sincrónico):**
-    - `DB_URL_SYNC=postgresql://user:pass@host:port/dbname`
-- **Para la app y los tests (asíncrono):**
-    - `DB_URL_ASYNC=postgresql+asyncpg://user:pass@host:port/dbname`
-
-**Migraciones en producción:**
-
-Ejecuta Alembic usando la variable sincrónica:
+Hemos añadido objetivos en el `Makefile` para envolver Alembic y simplificar el flujo. Usa los objetivos `make` desde tu máquina o dentro del contenedor:
 
 ```bash
-DB_URL_SYNC=postgresql://user:pass@host:port/dbname alembic upgrade head
+# Inicializar (solo la primera vez en un repo nuevo):
+make alembic-init
+
+# Crear una nueva migración (autogenerate + archivo en alembic/versions):
+make alembic-migrate
+
+# Aplicar migraciones (upgrade hasta head):
+make alembic-upgrade
+
+# Deshacer la última migración (downgrade -1):
+make alembic-downgrade
 ```
 
-O define la variable en el entorno antes de correr el comando.
+Usar `make` garantiza que `PYTHONPATH` y el contexto de ejecución estén correctamente definidos para que Alembic encuentre el módulo `src`.
 
-**La app en producción:**
+### Variables relevantes
 
-Usa la variable asíncrona para inicializar el motor async.
+- `DB_URL_SYNC` — URL sincrónica (usada por Alembic)
+- `DB_URL_ASYNC` — URL asíncrona (usada por la app)
 
-Esto permite que tanto migraciones como la app usen la misma base, pero con el motor adecuado.
-
-
-- **Migraciones Alembic:**
-    - Usa la variable `DB_URL_SYNC` (ejemplo: `sqlite:///dev.db`)
-    - Alembic solo soporta motores sincrónicos, por eso esta URL debe ser sincrónica.
-
-- **Aplicación y tests:**
-    - Usa la variable `DB_URL_ASYNC` (ejemplo: `sqlite+aiosqlite:///dev.db`)
-    - La app y los repositorios usan SQLAlchemy async, que requiere el motor asíncrono.
-
-En el workflow de CI/CD y en local, define ambas variables:
-
-```env
-DB_URL_SYNC=sqlite:///dev.db      # Para migraciones Alembic
-DB_URL_ASYNC=sqlite+aiosqlite:///dev.db  # Para la app y los tests
-```
-
-Ejemplo en GitHub Actions:
-
-```yaml
-env:
-    DB_URL_SYNC: sqlite:///dev.db
-    DB_URL_ASYNC: sqlite+aiosqlite:///dev.db
-```
-
-Tu código debe leer la variable adecuada según el contexto (sincrónico para migraciones, asíncrono para la app/tests).
+Nota: Alembic requiere un driver sincrónico; la app usa un driver asíncrono (ej: `postgresql+asyncpg://`). En CI y despliegue define ambas variables de entorno según corresponda.
 
 ---
-## Recomendaciones y próximos pasos
 
-- Añadir migraciones con Alembic para DB relacional.
-- Añadir tests de integración con una DB real en CI.
-- Configurar logging estructurado y métricas para producción.
- 
-## Ejecutar despliegues manualmente (GitHub Actions)
+## 🧑‍💻 Ejecución en desarrollo
 
-Los workflows de despliegue para Render y AWS están incluidos en el repositorio pero están configurados para ejecutarse manualmente desde la interfaz de GitHub (Actions → seleccionar workflow → Run workflow).
+Con **Docker Compose** (recomendado):
 
-Por qué: esto evita despliegues automáticos accidentales.
+```bash
+# Levantar servicios
+make up
 
-Workflows relevantes:
+# Entrar al contenedor
+make shell
+```
 
-- `.github/workflows/deploy-render.yml` — dispara un deploy en Render usando la API. Activador: `workflow_dispatch` (manual).
-- `.github/workflows/deploy-aws.yml` — construye y sube la imagen a Amazon ECR y puede integrarse con App Runner. Activador: `workflow_dispatch` (manual).
+Sin Docker:
 
-Secrets necesarios (añadir en GitHub → Settings → Secrets):
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+uvicorn src.app:app --reload
+```
 
-- Para Render:
-    - `RENDER_API_KEY`
-    - `RENDER_SERVICE_ID`
-    - `RENDER_URL` (opcional, usado para health-check)
+---
 
-- Para AWS / ECR / App Runner:
-    - `AWS_ACCESS_KEY_ID`
-    - `AWS_SECRET_ACCESS_KEY`
-    - `AWS_REGION` (por ejemplo `us-east-1`)
-    - `AWS_ACCOUNT_ID`
-    - `ECR_REPOSITORY` (nombre del repo en ECR, p.ej. `backend-base`)
+## 🧪 Pruebas (TDD y BDD)
 
-Ejecutar un deploy manual (ejemplo):
+El proyecto incluye **tests unitarios y de aceptación**.
 
-1. Ve a GitHub → Actions → selecciona "Deploy to Render" o "Build and push Docker image to ECR (manual)".
-2. Haz clic en "Run workflow" y, si corresponde, rellena inputs (si el workflow los requiere).
+### Estructura
 
-Si necesitas que los despliegues se disparen automáticamente tras la finalización exitosa de la CI, puedo cambiar `deploy-render.yml` para usar `workflow_run` y que se ejecute sólo cuando `main.yml` termine correctamente.
+```
+tests/
+├── domain/           # Tests unitarios (lógica pura)
+└── acceptance/       # Tests BDD (pytest-bdd + Gherkin)
+```
+
+### Comandos
+
+```bash
+make test            # Ejecuta todos los tests
+make test-unit       # Solo tests unitarios
+make test-acceptance # Solo tests BDD
+```
+
+> Las pruebas BDD usan `TestClient` de FastAPI y se ejecutan sin servidor externo.
+
+Detalles prácticos sobre `TestClient` y los acceptance tests
+
+- Qué hace `TestClient`: monta la aplicación ASGI (FastAPI) en memoria y permite hacer peticiones HTTP a la app desde pytest sin necesidad de arrancar un proceso externo. Esto habilita pruebas rápidas e independientes del entorno.
+
+- Inicio y eventos de aplicación: `TestClient` dispara los eventos de `startup` y `shutdown` de FastAPI, por lo que cualquier inicialización (conexión a DB en tests, carga de fixtures) definida en el `lifespan` o `startup` se ejecuta automáticamente.
+
+- Fixtures y preparación de la DB: en `tests/acceptance/conftest.py` hay fixtures que crean/aseguran las tablas, limpian filas entre escenarios y reinician secuencias (SQLite). Asegúrate de que las fixtures hagan _arranque limpio_ (crear tablas si hace falta y truncar) para que cada escenario sea determinista.
+
+- Cómo ejecutar los acceptance tests:
+
+```bash
+# desde el host (usa las variables de entorno del entorno de desarrollo):
+make test-acceptance
+
+# ejecutar un escenario o un conjunto especifico (más verboso):
+pytest tests/acceptance -k "herramientas" -s -vv
+```
+
+- Ejecutar dentro del contenedor (recomendado para reproducibilidad):
+
+```bash
+make shell        # levanta y entra al contenedor
+# dentro del contenedor:
+make test-acceptance
+```
+
+Con esto las pruebas BDD permanecen rápidas, deterministas y fáciles de ejecutar tanto en tu máquina como en CI.
+
+---
+
+## 🧰 Makefile y comandos útiles
+
+| Comando | Descripción |
+|----------|--------------|
+| `make up` | Construye y levanta contenedores |
+| `make down` | Detiene y elimina servicios |
+| `make test` | Ejecuta toda la suite de tests |
+| `make format` | Formatea el código con black/isort |
+| `make lint` | Ejecuta linters y type-checks |
+| `make check` | Corre `format-check` + `lint` |
+| `make shell` | Abre una shell en el contenedor backend |
+
+---
+
+## ☁️ CI/CD y despliegue
+
+Esta plantilla incluye workflows de ejemplo en `.github/workflows/` y patrones recomendados para desplegar en Render, AWS (App Runner/ECS) o usando Neon como base de datos.
+
+### Neon (Postgres serverless)
+
+- Define en GitHub Secrets la URL de Neon. En este proyecto conviene publicar ambas variantes según uso:
+   - `DB_URL_ASYNC` — p. ej. `postgresql+asyncpg://user:pass@host/db` (usada por la app FastAPI)
+   - `DB_URL_SYNC` — p. ej. `postgresql+psycopg2://user:pass@host/db` (útil para ejecutar Alembic desde un job/contenedor sync)
+
+### AWS (ECR + App Runner)
+
+Los workflows de despliegue en este repositorio ya se encargan de ejecutar las migraciones en Neon antes de promover la nueva versión, por lo que no es necesario ejecutar migraciones manualmente durante el despliegue. Para desplegar en AWS normalmente sólo necesitas construir y subir la imagen a ECR, configurar el servicio App Runner y asegurarte de que los secrets/variables estén presentes en GitHub Actions o en el entorno de ejecución.
+
+Variables/Secrets clave en AWS:
+
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `ECR_REPOSITORY`
+- `DB_URL_ASYNC`, `SECRET_KEY`, `ALLOWED_ORIGINS`
+
+
+### Render
+
+El pipeline de despliegue de este repositorio invoca el workflow de migraciones en Neon, de modo que no es necesario ejecutar comandos de migración manualmente en Render. Configura el servicio en Render para que use la imagen que publica el workflow y añade los secrets/variables necesarios.
+
+Variables/Secrets a configurar en Render:
+
+- `RENDER_API_KEY`, `RENDER_SERVICE_ID`, `DB_URL_ASYNC`, `ALLOWED_ORIGINS`
+
+### GitHub Actions
+
+Workflows incluidos (ejemplos):
+
+- `main.yml` — checks y tests (`make check`, `make test`).
+- `deploy-render.yml` — ejemplo para disparar un deploy en Render.
+- `deploy-aws.yml` — ejemplo para build/push a ECR y despliegue;
+
+Nota importante: los workflows están listos como ejemplos; para que funcionen define los secrets mencionados en Settings → Secrets. En este repositorio los pipelines de despliegue ya invocan el workflow de migraciones (`deploy-neon.yml`) y por tanto las migraciones se ejecutan automáticamente contra Neon durante el proceso de despliegue — no hace falta ejecutarlas manualmente. Asegúrate de que `DB_URL_SYNC`/`DB_URL_ASYNC` y demás secrets estén definidos en GitHub Actions para que el job de migraciones pueda conectarse a Neon.
+
+### Secrets a crear (copia/pega)
+
+A continuación tienes una tabla con los secrets y variables que aparecen en los workflows; crea estos secrets en GitHub (Settings → Secrets and variables → Actions) y configura las variables de entorno equivalentes en tu proveedor (Render, ECS, App Runner) para runtime:
+
+| Secret / Variable | Usado por | Descripción |
+|---|---|---|
+| NEON_DB_SYNC | `deploy-neon.yml` (job `migrate`) | URL síncrona de Neon (ej. `postgresql+psycopg2://user:pass@host:port/db`) — usada por Alembic en el job de migraciones |
+| DB_URL_ASYNC | runtime (Render / ECS / App Runner) | URL asíncrona para la app FastAPI (ej. `postgresql+asyncpg://user:pass@host/db`) |
+| DB_URL_SYNC | (opcional) runtime / CI | Variante síncrona si alguna tarea la necesita en runtime; `NEON_DB_SYNC` se pasa a los workflows para migraciones |
+| AWS_ACCESS_KEY_ID | `deploy-aws.yml` | Credencial AWS (user con permisos ECR/Push) |
+| AWS_SECRET_ACCESS_KEY | `deploy-aws.yml` | Credencial AWS |
+| AWS_ACCOUNT_ID | `deploy-aws.yml` | ID de la cuenta AWS (usado para tag de la imagen) |
+| ECR_REPOSITORY | `deploy-aws.yml` | Nombre del repositorio en ECR (se puede dejar en env del workflow) |
+| RENDER_API_KEY | `deploy-render.yml` | API key para la cuenta Render (usar secret) |
+| RENDER_SERVICE_ID | `deploy-render.yml` | ID del servicio en Render que se va a desplegar |
+| RENDER_URL | `deploy-render.yml` | URL pública para health-check (opcional; usada por el workflow) |
+| SECRET_KEY | runtime | Clave secreta de la aplicación (runtime) |
+| ALLOWED_ORIGINS | runtime | Orígenes permitidos para CORS (runtime) |
+
+> Nota: `NEON_DB_SYNC` es el secret requerido por `deploy-neon.yml` y el workflow lo exporta como `DB_URL_SYNC` para ejecutar `make alembic-upgrade`. `DB_URL_ASYNC` debe establecerse en el entorno del servicio para que la app use el driver asíncrono en producción.
+
+---
+
+## ♻️ Reutilización y buenas prácticas
+
+La arquitectura está pensada para ser **reutilizable y desacoplada**:
+
+- El **dominio** y la **fachada** no dependen de frameworks.
+- Se puede cambiar la base de datos sin modificar la lógica de negocio.
+- Permite testear el dominio de forma aislada.
+- Facilita extender a otros tipos de adaptadores (gRPC, CLI, eventos, etc.).
+
+> Mantén las entidades puras, define interfaces en el dominio y deja las implementaciones en `adapters/`.
+
+---
+
+📘 **Con esta plantilla tendrás un backend modular, testeable y preparado para producción, sin sacrificar claridad ni mantenibilidad.**
