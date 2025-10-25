@@ -3,19 +3,9 @@ import json
 import pytest
 from pytest_bdd import scenarios, given, when, then, parsers
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, text
-from src.app import app
 from src.config import settings
 
 scenarios("../features/user.feature")
-
-@pytest.fixture
-def client() -> TestClient:
-    return TestClient(app)
-
-@pytest.fixture
-def context():
-    return {}
 
 @given("the API is running")
 def api_is_running(client: TestClient):

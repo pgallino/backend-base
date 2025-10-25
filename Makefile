@@ -1,6 +1,14 @@
 # Variable que apunta a nuestra carpeta de código fuente
 PYTHON_FILES = src
 
+# Coverage targets for acceptance tests (default focuses on the routes/controllers
+# and on repository implementations). You can override when calling make, e.g.
+# `make test-acceptance ACCEPTANCE_COV_DIRS="src"`
+ACCEPTANCE_COV_DIRS ?= src/adapters/api/routes src/adapters/db/repositories
+
+# Build pytest --cov flags from the list of dirs in ACCEPTANCE_COV_DIRS
+COVER_FLAGS := $(foreach d,$(ACCEPTANCE_COV_DIRS),--cov=$(d))
+
 .PHONY: up down shell run format format-check check test test-unit test-acceptance ci
 
 # --- Comandos para el Host (tu máquina) ---
@@ -69,20 +77,24 @@ check:
 	$(MAKE) lint
 
 # Ejecuta tests unitarios y aceptacion con pytest
+
 test:
-	@echo "-> Ejecutando tests (pytest con coverage desde pytest.ini)..."
+	@echo "-> Ejecutando tests: unitarios y de aceptación con umbrales separados..."
 	$(MAKE) test-unit
 	$(MAKE) test-acceptance
 
 # Tests unitarios solamente
 test-unit:
-	@echo "-> Ejecutando tests UNITARIOS..."
-	pytest tests/domain
+	@echo "-> Ejecutando tests UNITARIOS (coverage sobre src/domain, fail-under=75)..."
+	pytest --cov=src/domain --cov-report=term-missing --cov-report=xml:coverage-unit.xml --cov-fail-under=75 tests/domain
 
 # Tests de aceptación (BDD) solamente
 test-acceptance:
-	@echo "-> Ejecutando tests de ACEPTACIÓN (BDD)..."
-	pytest tests/acceptance
+	@echo "-> Ejecutando tests de ACEPTACIÓN (BDD) (coverage sobre: $(ACCEPTANCE_COV_DIRS))"
+	# Medimos cobertura de la capa de API / rutas y de los repositorios para validar
+	# que los features persisten correctamente. Puedes sobrescribir
+	# ACCEPTANCE_COV_DIRS al invocar make si quieres otro scope.
+	pytest $(COVER_FLAGS) --cov-report=term-missing --cov-report=xml:coverage-acceptance.xml --cov-fail-under=60 tests/acceptance
 
 # Objetivo de CI: calidad + tests
 ci:

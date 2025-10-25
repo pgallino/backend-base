@@ -12,3 +12,10 @@ class UserModel(Base):
     username = Column(String, unique=True, nullable=False)
     name = Column(String, nullable=False)
     email = Column(String, nullable=False)
+
+
+class ToolModel(Base):
+    __tablename__ = "tool"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String, unique=True, nullable=False)
+    description = Column(String, nullable=True)
