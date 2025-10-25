@@ -65,7 +65,7 @@ jobs:
 
       # 9️⃣ Procesar y mostrar el reporte de coverage
       - name: Code Coverage Report
-        uses: irongut/codecoveragesummary@v1
+        uses: irongut/codecoveragesummary@v1.3.1
         with:
           filename: coverage.xml
           badge: true
