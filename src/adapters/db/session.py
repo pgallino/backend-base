@@ -1,12 +1,13 @@
-import os
 import ssl
 from typing import Any, Dict, Union
 from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-# default to sqlite for local development
-DB_URL = os.getenv("DB_URL_ASYNC", "sqlite+aiosqlite:///./dev.db")
+# Read DB URL from central Settings
+from src.config import settings
+
+DB_URL = settings.DB_URL_ASYNC
 
 
 def _sanitize_async_url_and_connect_args(db_url: str):
@@ -70,7 +71,10 @@ def _sanitize_async_url_and_connect_args(db_url: str):
 sanitized_url, _connect_args = _sanitize_async_url_and_connect_args(DB_URL)
 
 engine = create_async_engine(
-    sanitized_url, connect_args=_connect_args, echo=True, future=True
+    sanitized_url,
+    connect_args=_connect_args,
+    echo=bool(settings.SQL_ECHO),
+    future=True,
 )
 AsyncSessionLocal = async_sessionmaker(
     engine, class_=AsyncSession, expire_on_commit=False
