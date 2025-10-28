@@ -35,3 +35,19 @@ class ApplicationFacade:
     async def list_tools(self):
         """Devuelve todas las herramientas."""
         return await self.tool_service.list_tools()
+
+    async def update_tool(
+        self,
+        tool_id: int,
+        name: str | None = None,
+        description: str | None = None,
+        link: str | None = None,
+    ):
+        """Actualiza una herramienta delegando al servicio de dominio."""
+        return await self.tool_service.update_tool(
+            tool_id=tool_id, name=name, description=description, link=link
+        )
+
+    async def delete_tool(self, tool_id: int) -> bool:
+        """Borra una herramienta delegando al servicio de dominio."""
+        return await self.tool_service.delete_tool(tool_id)

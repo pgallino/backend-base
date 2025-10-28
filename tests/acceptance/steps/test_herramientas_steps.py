@@ -38,6 +38,19 @@ def i_get_path(client: TestClient, context: dict, path: str):
     context["response"] = client.get(path)
 
 
+@when(parsers.parse('I PUT tool by id with body \'{body}\''))
+def put_tool_by_id_with_body(client: TestClient, context: dict, body: str):
+    tool_id = context.get("created_id", 1)
+    payload = json.loads(body)
+    context["response"] = client.put(f"/herramientas/{tool_id}", json=payload)
+
+
+@when("I DELETE tool by id")
+def delete_tool_by_id(client: TestClient, context: dict):
+    tool_id = context.get("created_id", 1)
+    context["response"] = client.delete(f"/herramientas/{tool_id}")
+
+
 @then(parsers.parse("the response status code should be {status_code:d}"))
 def response_status_should_be(context: dict, status_code: int):
     resp = context["response"]

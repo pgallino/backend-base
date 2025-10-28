@@ -54,3 +54,38 @@ class SqlAlchemyToolRepository(ToolRepository):
                     )
                 )
             return tools
+
+    async def update(self, tool: Tool) -> Tool | None:
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(ToolModel).where(ToolModel.id == tool.id)
+            )
+            model = result.scalar_one_or_none()
+            if model is None:
+                return None
+            # update fields (use setattr to avoid static typing issues with SQLAlchemy
+            # Column descriptors in some type-checking environments)
+            setattr(model, "name", tool.name)
+            setattr(model, "description", tool.description)
+            setattr(model, "link", tool.link)
+            session.add(model)
+            await session.commit()
+            await session.refresh(model)
+            return Tool(
+                id=getattr(model, "id"),
+                name=getattr(model, "name"),
+                description=getattr(model, "description"),
+                link=getattr(model, "link"),
+            )
+
+    async def delete(self, tool_id: int) -> bool:
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                select(ToolModel).where(ToolModel.id == tool_id)
+            )
+            model = result.scalar_one_or_none()
+            if model is None:
+                return False
+            await session.delete(model)
+            await session.commit()
+            return True

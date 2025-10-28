@@ -21,6 +21,19 @@ class FakeToolRepository:
     async def list_all(self):
         return list(self._store.values())
 
+    async def update(self, tool: Tool):
+        # Replace existing tool if present
+        if tool.id in self._store:
+            self._store[tool.id] = tool
+            return tool
+        return None
+
+    async def delete(self, tool_id: int) -> bool:
+        if tool_id in self._store:
+            del self._store[tool_id]
+            return True
+        return False
+
 
 @pytest.mark.asyncio
 async def test_tool_service_create_and_get_and_list():
@@ -49,3 +62,25 @@ async def test_tool_service_no_repository_error():
         await service.create_tool("n", "d", "")
     with pytest.raises(RuntimeError):
         await service.list_tools()
+
+
+@pytest.mark.asyncio
+async def test_tool_service_update_and_delete():
+    repo = FakeToolRepository()
+    service = ToolService(tool_repository=repo)
+
+    created = await service.create_tool("fastapi", "web framework", "")
+    assert created.id == 1
+
+    # Update the tool
+    updated = await service.update_tool(created.id, name="fastapi-v2", description="wf", link="https://ex")
+    assert updated is not None
+    assert updated.name == "fastapi-v2"
+
+    # Delete the tool
+    deleted = await service.delete_tool(created.id)
+    assert deleted is True
+
+    # Ensure it's gone
+    fetched = await service.get_tool(created.id)
+    assert fetched is None

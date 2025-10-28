@@ -25,3 +25,31 @@ class ToolService:
         if self.tool_repository is None:
             raise RuntimeError("No hay repositorio de tool configurado")
         return await self.tool_repository.list_all()
+
+    async def update_tool(
+        self,
+        tool_id: int,
+        name: str | None = None,
+        description: str | None = None,
+        link: str | None = None,
+    ) -> Tool | None:
+        if self.tool_repository is None:
+            raise RuntimeError("No hay repositorio de tool configurado")
+        existing = await self.tool_repository.get_by_id(tool_id)
+        if existing is None:
+            return None
+        # construct updated tool (preserve existing values when None)
+        updated = Tool(
+            id=existing.id,
+            name=name or existing.name,
+            description=(
+                description if description is not None else existing.description
+            ),
+            link=link if link is not None else existing.link,
+        )
+        return await self.tool_repository.update(updated)
+
+    async def delete_tool(self, tool_id: int) -> bool:
+        if self.tool_repository is None:
+            raise RuntimeError("No hay repositorio de tool configurado")
+        return await self.tool_repository.delete(tool_id)

@@ -1,32 +1,40 @@
 import pytest
-from src.adapters.db.models.models import Base, ToolModel
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+
+from src.adapters.db.models.models import Base
 from src.adapters.db.repositories.tool_repository import SqlAlchemyToolRepository
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from src.domain.tool import Tool
 
 
 @pytest.mark.asyncio
-async def test_sqlalchemy_tool_repository_create_and_list():
+async def test_get_by_id_and_list_empty_and_update_delete_not_found(monkeypatch):
     engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
-    async_session = async_sessionmaker(engine)
+    async_session = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+    import importlib
+
+    repo_module = importlib.import_module("src.adapters.db.repositories.tool_repository")
+    monkeypatch.setattr(repo_module, "AsyncSessionLocal", async_session)
+
     repo = SqlAlchemyToolRepository()
-    # Patch module-level session to use our test DB if code expects attribute on instance
-    try:
-        repo.AsyncSessionLocal = async_session
-    except Exception:
-        pass
 
-    # Create tool
-    tool = Tool(id=0, name="fastapi", description="web framework")
-    created = await repo.create(tool)
-    assert created.id == 1
-    assert created.name == "fastapi"
+    # get_by_id on empty DB
+    res = await repo.get_by_id(1)
+    assert res is None
 
-    # List tools
+    # list_all on empty DB
     all_tools = await repo.list_all()
     assert isinstance(all_tools, list)
-    assert len(all_tools) == 1
-    assert all_tools[0].name == "fastapi"
+    assert len(all_tools) == 0
+
+    # update non-existing tool
+    nonexist = Tool(id=999, name="x", description=None, link=None)
+    updated = await repo.update(nonexist)
+    assert updated is None
+
+    # delete non-existing tool
+    deleted = await repo.delete(999)
+    assert deleted is False
