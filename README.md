@@ -54,26 +54,29 @@ Proporcionar una base sólida, extensible y educativa para proyectos reales, enf
 El proyecto implementa una **Arquitectura Hexagonal (Ports & Adapters)**, donde cada capa tiene una responsabilidad bien definida.
 
 ```text
-Cliente HTTP
-   ↓
-[Adaptador de entrada] — FastAPI (rutas, validación Pydantic)
-   ↓
-[Fachada de aplicación] — coordina lógica de dominio y persistencia
-   ↓
-[Dominio] — entidades y servicios puros de negocio
-   ↓
-[Adaptador de salida] — repositorios SQLAlchemy async
-   ↓
-Base de datos (SQLite / Postgres)
+Adaptador de Entrada (HTTP/CLI)
+        ↓
+[Fachada de Aplicación (Orquestador)]
+        ↓ (Usa uno o varios)
+[Servicios de Aplicación/Dominio]
+        ↓ (Interactúan con)
+[Adaptadores de Salida: Repositorios]
+        ↓
+Base de Datos (PostgreSQL / SQLite)
 ```
 
 ### Capas principales
 
-- **Adaptadores de entrada:** reciben peticiones HTTP, validan con Pydantic y delegan a la fachada.
-- **Fachada de aplicación:** orquesta la interacción entre dominio y repositorios.
-- **Dominio:** contiene entidades y reglas de negocio puras, sin dependencias externas.
-- **Adaptadores de salida:** implementan la persistencia mediante SQLAlchemy async.
-- **Infraestructura:** configuración, migraciones, logging, etc.
+### 🗂️ Capas y Componentes Clave
+
+| Capa/Componente | Rol Principal | Interacciones Clave |
+| :--- | :--- | :--- |
+| **Adaptadores de Entrada** | Reciben peticiones (HTTP, CLI), validan los datos y delegan en la Fachada. | Solo interactúan con la **Fachada de Aplicación**. |
+| **Fachada de Aplicación** | Actúa como **orquestador principal** de un caso de uso. | Invoca a uno o más **Servicios de Aplicación/Dominio** para ejecutar la lógica. |
+| **Servicios de Aplicación/Dominio** | Contienen la lógica de negocio específica y utilizan los Repositorios para datos. | Utilizan los **Repositorios** (Adaptadores de Salida) para obtener o guardar datos. |
+| **Dominio** | Contiene **Entidades** y **Reglas de Negocio Puras**. | Son utilizados e implementados por los **Servicios** (las Entidades viajan entre capas). |
+| **Adaptadores de Salida: Repositorios** | Implementan la interfaz de persistencia (el Puerto) utilizando tecnología específica (**SQLAlchemy async**). | Interactúan con la **Base de Datos**. |
+| **Infraestructura** | Servicios transversales: configuración, *logging*, *fixtures*, etc. | Provee herramientas de soporte al resto de las capas. |
 
 Esta separación facilita el testing, la evolución del código y la independencia del framework o base de datos.
 
