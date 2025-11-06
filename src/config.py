@@ -66,7 +66,6 @@ _required_env_vars = [
     "PROJECT_NAME",
     "ENVIRONMENT",
     "DB_URL_ASYNC",
-    "DB_URL_SYNC",
 ]
 
 # Fail fast with a clear message if any required env var is missing.
