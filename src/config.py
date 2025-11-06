@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import List, final
+from typing import List, Optional, final
 
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -18,7 +18,9 @@ class Settings(BaseSettings):
 
     # Database URLs
     DB_URL_ASYNC: str
-    DB_URL_SYNC: str
+    # DB_URL_SYNC is optional at runtime: required only for migration jobs
+    # (the `deploy-neon.yml` workflow will pass NEON_DB_SYNC -> DB_URL_SYNC).
+    DB_URL_SYNC: Optional[str] = None
 
     # SQLAlchemy echo flag (enable SQL logging). Provide SQL_ECHO in env (true/false)
     SQL_ECHO: bool = False
