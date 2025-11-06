@@ -11,6 +11,7 @@ jobs:
       secrets:
         NEON_DB_SYNC: ${{ secrets.NEON_DB_SYNC }}
 
+
   # 2. Ejecutar Despliegue Render (Depende de Neon)
   deploy-render:
     name: Deploy to Render

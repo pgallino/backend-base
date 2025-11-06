@@ -125,6 +125,18 @@ SECRET_KEY=super-secret-key
 
 > ⚠️ **No subas secretos reales al repositorio.** Usa secrets en CI/CD o servicios como Render o AWS.
 
+### Configuración en desarrollo (recomendado)
+
+Para facilitar el desarrollo local, incluimos un archivo de ejemplo `.env.example` en la raíz del proyecto.
+
+Flujo recomendado para nuevos desarrolladores:
+
+1. Copia el ejemplo a `.env` (archivo local, nunca comiteado):
+
+```bash
+cp .env.example .env
+```
+
 ---
 
 ## 🗄️ Base de datos y migraciones

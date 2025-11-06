@@ -4,6 +4,7 @@ uvicorn[standard]
 
 # Gestión de Configuración
 pydantic-settings
+python-dotenv
 
 # Herramientas de Calidad de Código (Solo Formato)
 black
