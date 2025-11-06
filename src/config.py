@@ -14,7 +14,13 @@ class Settings(BaseSettings):
     # All settings are required and must be provided via environment variables.
     PROJECT_NAME: str
     ENVIRONMENT: str
-    # ALLOWED_ORIGINS removed: CORS is intentionally disabled by default.
+    # CORS configuration (optional):
+    # - If ALLOW_ALL_ORIGINS is true, the app will allow requests from any origin
+    #   (useful for public APIs or temporary testing). Do NOT enable in sensitive
+    #   production environments unless you understand the risks.
+    # - Otherwise, set ALLOWED_ORIGINS to a comma-separated list of origins.
+    ALLOWED_ORIGINS: Optional[str] = None
+    ALLOW_ALL_ORIGINS: bool = False
 
     # Database URLs
     DB_URL_ASYNC: str
