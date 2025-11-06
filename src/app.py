@@ -1,12 +1,13 @@
 import json
 from contextlib import asynccontextmanager
+from uuid import uuid4
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.adapters.api.routes import health, herramientas
 from src.config import settings
-from src.log import logger
+from src.log import logger, new_request_id, request_id_ctx_var
 
 
 @asynccontextmanager
@@ -62,6 +63,40 @@ if origins:
         allow_headers=["Authorization", "Content-Type", "Accept"],
         max_age=3600,
     )
+
+    @app.middleware("http")
+    async def add_request_id_middleware(request: Request, call_next):
+        """Middleware que garantiza un request id por petición y lo propaga a los logs.
+
+        - Si el cliente envía X-Request-ID lo reutiliza.
+        - Si no, genera uno nuevo y lo añade a la respuesta en X-Request-ID.
+        """
+        # Prefer header from client if present
+        rid = request.headers.get("X-Request-ID") or new_request_id()
+        # Set in context var so the formatter picks it up
+        request_id_ctx_var.set(rid)
+        logger.debug(
+            "HTTP request start %s %s request_id=%s",
+            request.method,
+            request.url.path,
+            rid,
+        )
+        try:
+            response = await call_next(request)
+        finally:
+            # Clear contextvar to avoid leaking between requests in the same loop
+            request_id_ctx_var.set("-")
+        # Echo back the request id
+        response.headers["X-Request-ID"] = rid
+        logger.debug(
+            "HTTP request end %s %s request_id=%s status=%s",
+            request.method,
+            request.url.path,
+            rid,
+            getattr(response, "status_code", "-"),
+        )
+        return response
+
 
 app.include_router(health.router)  # type: ignore
 # User routes removed — application only exposes herramientas

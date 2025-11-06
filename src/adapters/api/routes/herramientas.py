@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from src.adapters.api.facade_instance import api_facade
+from src.log import logger
 
 router = APIRouter(tags=["herramientas"])  # Spanish path tag
 
@@ -23,6 +24,7 @@ class ToolUpdateRequest(BaseModel):
 
 @router.post("/herramientas", response_model=None, status_code=status.HTTP_201_CREATED)
 async def create_tool_route(request: ToolCreateRequest):
+    logger.info("API: create_tool request name=%s", request.name)
     tool = await api_facade.create_tool(
         name=request.name,
         description=request.description or "",
@@ -35,6 +37,7 @@ async def create_tool_route(request: ToolCreateRequest):
     "/herramientas/{tool_id}", response_model=None, status_code=status.HTTP_200_OK
 )
 async def get_tool_route(tool_id: int):
+    logger.info("API: get_tool request id=%s", tool_id)
     tool = await api_facade.get_tool(tool_id)
     if tool is None:
         raise HTTPException(
@@ -45,6 +48,7 @@ async def get_tool_route(tool_id: int):
 
 @router.get("/herramientas", response_model=None, status_code=status.HTTP_200_OK)
 async def list_tools_route():
+    logger.info("API: list_tools request")
     tools = await api_facade.list_tools()
     # tools is a list of dataclass Tool — convert to list of dicts
     content = [asdict(t) for t in tools]
@@ -60,6 +64,7 @@ async def replace_tool_route(tool_id: int, request: ToolCreateRequest):
     All required fields must be present (name required). This follows PUT
     semantics: the provided representation replaces the existing one.
     """
+    logger.info("API: replace_tool request id=%s name=%s", tool_id, request.name)
     tool = await api_facade.update_tool(
         tool_id=tool_id,
         name=request.name,
@@ -79,6 +84,7 @@ async def replace_tool_route(tool_id: int, request: ToolCreateRequest):
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_tool_route(tool_id: int):
+    logger.info("API: delete_tool request id=%s", tool_id)
     deleted = await api_facade.delete_tool(tool_id)
     if not deleted:
         raise HTTPException(

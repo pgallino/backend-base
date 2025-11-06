@@ -3,6 +3,7 @@ from typing import final
 
 from src.adapters.db.repositories.tool_repository import SqlAlchemyToolRepository
 from src.domain.tool_service import ToolService
+from src.log import logger
 
 
 @final
@@ -20,20 +21,24 @@ class ApplicationFacade:
 
     def health_check(self):
         # Devuelve datos puros, no dict ni JSON
+        logger.info("Facade: health_check called")
         return self.project_name, self.environment
 
     # user operations removed: this application only exposes tools
 
     async def get_tool(self, tool_id: int):
         """Obtiene una herramienta por id delegando a ToolService."""
+        logger.debug("Facade: get_tool id=%s", tool_id)
         return await self.tool_service.get_tool(tool_id)
 
     async def create_tool(self, name: str, description: str, link: str):
         """Crea una herramienta delegando al servicio."""
+        logger.debug("Facade: create_tool name=%s", name)
         return await self.tool_service.create_tool(name, description, link)
 
     async def list_tools(self):
         """Devuelve todas las herramientas."""
+        logger.debug("Facade: list_tools")
         return await self.tool_service.list_tools()
 
     async def update_tool(
@@ -44,10 +49,12 @@ class ApplicationFacade:
         link: str | None = None,
     ):
         """Actualiza una herramienta delegando al servicio de dominio."""
+        logger.debug("Facade: update_tool id=%s", tool_id)
         return await self.tool_service.update_tool(
             tool_id=tool_id, name=name, description=description, link=link
         )
 
     async def delete_tool(self, tool_id: int) -> bool:
         """Borra una herramienta delegando al servicio de dominio."""
+        logger.debug("Facade: delete_tool id=%s", tool_id)
         return await self.tool_service.delete_tool(tool_id)

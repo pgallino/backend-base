@@ -1,5 +1,7 @@
 from typing import final
 
+from src.log import logger
+
 from .tool import Tool
 
 
@@ -13,17 +15,20 @@ class ToolService:
     async def get_tool(self, tool_id: int) -> Tool | None:
         if self.tool_repository is None:
             raise RuntimeError("No hay repositorio de tool configurado")
+        logger.info("Service: get_tool id=%s", tool_id)
         return await self.tool_repository.get_by_id(tool_id)
 
     async def create_tool(self, name: str, description: str, link: str) -> Tool:
         if self.tool_repository is None:
             raise RuntimeError("No hay repositorio de tool configurado")
         tool = Tool.from_input(name=name, description=description, link=link)
+        logger.info("Service: create_tool name=%s", name)
         return await self.tool_repository.create(tool)
 
     async def list_tools(self) -> list[Tool]:
         if self.tool_repository is None:
             raise RuntimeError("No hay repositorio de tool configurado")
+        logger.info("Service: list_tools")
         return await self.tool_repository.list_all()
 
     async def update_tool(
@@ -35,6 +40,7 @@ class ToolService:
     ) -> Tool | None:
         if self.tool_repository is None:
             raise RuntimeError("No hay repositorio de tool configurado")
+        logger.info("Service: update_tool id=%s", tool_id)
         existing = await self.tool_repository.get_by_id(tool_id)
         if existing is None:
             return None
@@ -52,4 +58,5 @@ class ToolService:
     async def delete_tool(self, tool_id: int) -> bool:
         if self.tool_repository is None:
             raise RuntimeError("No hay repositorio de tool configurado")
+        logger.info("Service: delete_tool id=%s", tool_id)
         return await self.tool_repository.delete(tool_id)
