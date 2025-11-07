@@ -40,11 +40,11 @@ jobs:
       - name: Set up QEMU and Docker Buildx
         uses: docker/setup-qemu-action@v2
 
-      - name: Build and push image to ECR
+      - name: Build and push image to ECR (prod Dockerfile)
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile
+          file: ./Dockerfile.prod
           push: true
           tags: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPOSITORY }}:latest
           platforms: linux/amd64

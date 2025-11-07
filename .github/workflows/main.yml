@@ -22,17 +22,17 @@ jobs:
         with:
           python-version: '3.12'
 
-      # 3️⃣ Cachear dependencias pip
+      # 3️⃣ Cachear dependencias pip (dev requirements)
       - name: Cache pip
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements-dev.txt') }}
           restore-keys: ${{ runner.os }}-pip-
 
-      # 4️⃣ Instalar dependencias
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      # 4️⃣ Instalar dependencias de desarrollo
+      - name: Install dev dependencies
+        run: pip install -r requirements-dev.txt
 
       # 5️⃣ Verificar formato y tipos
       - name: Format & type checks
@@ -46,6 +46,7 @@ jobs:
           ENVIRONMENT: test
           DB_URL_SYNC: sqlite:///dev.db
           DB_URL_ASYNC: sqlite+aiosqlite:///dev.db
+          PYTHONPATH: src
 
       # 7️⃣ Ejecutar tests (ya con la base migrada)
       - name: Run tests

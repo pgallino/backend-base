@@ -1,0 +1,27 @@
+FROM python:3.12-slim
+
+# Production image: minimal and secure. Uses requirements-prod.txt.
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Install only what we need for runtime
+COPY requirements-prod.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements-prod.txt
+
+# Copy application code
+COPY . .
+
+# Create non-root user and fix permissions
+RUN useradd --create-home appuser && chown -R appuser /app
+USER appuser
+
+EXPOSE 8000
+
+# Recommended to override CMD in orchestrator if needed (WEB_CONCURRENCY, PORT)
+# Default: start uvicorn with 1 worker. For more robust production you can
+# use gunicorn with uvicorn workers.
+CMD ["uvicorn", "src.application.api_app:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--workers", "1"]

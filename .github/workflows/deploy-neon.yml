@@ -21,8 +21,8 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - name: Install production dependencies (for migrations)
+        run: pip install -r requirements-prod.txt
 
       - name: Run migrations
         run: make alembic-upgrade

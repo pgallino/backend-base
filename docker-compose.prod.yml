@@ -1,0 +1,16 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    image: backend-base:prod
+    container_name: backend
+    # In production we prefer the image CMD so we don't override startup behavior here.
+    # If you need to pass args, set them in the orchestration system.
+    ports:
+      - "8000:8000"
+    # Do NOT mount the source tree in production.
+    # Use env_file for simple examples, but prefer secret managers in real infra.
+    env_file:
+      - .env
+    restart: unless-stopped

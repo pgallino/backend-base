@@ -179,21 +179,91 @@ Nota: Alembic requiere un driver sincrónico; la app usa un driver asíncrono (e
 Con **Docker Compose** (recomendado):
 
 ```bash
-# Levantar servicios
-make up
 
-# Entrar al contenedor
-make shell
+# Levantar los servicios de desarrollo (api + cli)
+docker compose -f docker-compose.dev.yml up -d
+
+# Entrar al contenedor CLI (para ejecutar comandos Typer / make)
+docker compose -f docker-compose.dev.yml exec cli sh
+
+# Entrar al contenedor API (uvicorn corre en segundo plano)
+docker compose -f docker-compose.dev.yml exec api sh
 ```
 
-Sin Docker:
+### Desarrollo — hay dos aplicaciones (API y CLI)
+
+En este repositorio conviven dos "apps" distintas que comparten la misma base de código y la misma fachada de aplicación:
+
+- API (FastAPI): el servidor HTTP que expone los endpoints REST/OpenAPI. El entrypoint de la API está en `src.application.api_app` y en desarrollo se ejecuta con `uvicorn`.
+- CLI (Typer): una interfaz de línea de comandos que reutiliza la lógica de la aplicación (fachada). El entrypoint del CLI está en `src.cli_app`.
+
+Por qué dos aplicaciones?
+- Muestra que, reutilizando la misma fachada de aplicación y sin modificar el código interno del dominio, se pueden exponer múltiples interfaces (por ejemplo HTTP y CLI) que comparten exactamente la misma lógica. 
+
+Arquitectura de Docker / dependencias
+- Hay dos archivos de requirements:
+        - `requirements-dev.txt` — dependencias para desarrollo (typer, pytest, tools de formateo). Se usa en la imagen `Dockerfile.dev`.
+        - `requirements-prod.txt` — dependencias mínimo para producción. Se usa en `Dockerfile.prod`.
+- Hay dos Dockerfiles:
+        - `Dockerfile.dev` — imagen de desarrollo (contiene herramientas de desarrollo y test).
+        - `Dockerfile.prod` — imagen optimizada para producción y despliegue.
+- Hay dos compose (ejemplos):
+        - `docker-compose.dev.yml` — orquesta los servicios de desarrollo (definimos `api` y `cli`).
+        - `docker-compose.prod.yml` — ejemplo para despliegue o integración en entornos más cercanos a producción.
+
+Cómo usar la API y la CLI (paso a paso)
+
+1) Construir la imagen de desarrollo (opcional, el `up` hace build si falta):
 
 ```bash
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn src.app:app --reload
+sh ./scripts/build_dev.sh
 ```
+
+2) Levantar los servicios de desarrollo:
+
+```bash
+docker compose -f docker-compose.dev.yml up -d
+```
+
+3) Entrar a la shell del CLI (útil para ejecutar comandos Typer):
+
+```bash
+docker compose -f docker-compose.dev.yml exec cli sh
+# dentro del contenedor:
+python -m src.cli_app list-tools
+python -m src.cli_app create "AWS" --description "Despliegue en la nube" --link "https://aws.com"
+```
+
+4) Usar la API desde el host (documentación interactiva en /docs):
+
+```bash
+curl http://localhost:8000/  # o la ruta health/ según la app
+# Abrir la UI de OpenAPI en el navegador:
+http://localhost:8000/docs
+```
+
+5) Ejecutar migraciones (Alembic) usando el contenedor CLI (usa `.env` para DB_URL_SYNC):
+
+```bash
+docker compose -f docker-compose.dev.yml exec cli alembic upgrade head
+```
+
+Consejos rápidos
+- Si quieres menos ruido en logs, define en tu `.env`:
+
+```
+LOG_LEVEL=INFO
+```
+
+- Si prefieres no escribir `-f docker-compose.dev.yml` cada vez, añade un alias en tu shell:
+
+```bash
+alias dcd='docker compose -f docker-compose.dev.yml'
+# luego:
+dcd up -d
+dcd exec cli sh
+```
+
 
 ---
 

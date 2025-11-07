@@ -1,5 +1,6 @@
 import contextvars
 import logging
+import os
 import sys
 from uuid import uuid4
 
@@ -33,8 +34,21 @@ def setup_logging():
     for h in list(root.handlers):
         root.removeHandler(h)
     root.addHandler(handler)
-    # Default to DEBUG to show detailed logs in dev
-    root.setLevel(logging.DEBUG)
+    # Allow overriding the log level from environment (useful for .env in dev)
+    # Expected values: DEBUG, INFO, WARNING, ERROR, CRITICAL
+    level_name = os.environ.get("LOG_LEVEL", "DEBUG").upper()
+    try:
+        level = getattr(logging, level_name)
+    except Exception:
+        level = logging.DEBUG
+    root.setLevel(level)
+
+    # Reduce noise from very chatty third-party libraries unless debugging
+    if level > logging.DEBUG:
+        logging.getLogger("aiosqlite").setLevel(logging.WARNING)
+        logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
+        logging.getLogger("asyncio").setLevel(logging.WARNING)
+        logging.getLogger("uvicorn").setLevel(logging.WARNING)
 
 
 # Inicializa el logging al cargar el módulo
