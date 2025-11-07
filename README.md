@@ -201,31 +201,27 @@ Por qué dos aplicaciones?
 - Muestra que, reutilizando la misma fachada de aplicación y sin modificar el código interno del dominio, se pueden exponer múltiples interfaces (por ejemplo HTTP y CLI) que comparten exactamente la misma lógica. 
 
 Arquitectura de Docker / dependencias
-- Hay dos archivos de requirements:
-        - `requirements-dev.txt` — dependencias para desarrollo (typer, pytest, tools de formateo). Se usa en la imagen `Dockerfile.dev`.
-        - `requirements-prod.txt` — dependencias mínimo para producción. Se usa en `Dockerfile.prod`.
-- Hay dos Dockerfiles:
-        - `Dockerfile.dev` — imagen de desarrollo (contiene herramientas de desarrollo y test).
-        - `Dockerfile.prod` — imagen optimizada para producción y despliegue.
-- Hay dos compose (ejemplos):
-        - `docker-compose.dev.yml` — orquesta los servicios de desarrollo (definimos `api` y `cli`).
-        - `docker-compose.prod.yml` — ejemplo para despliegue o integración en entornos más cercanos a producción.
+
+- Archivos de requirements:
+        - `requirements-dev.txt` — dependencias para desarrollo (typer, pytest, herramientas de formateo). Se usa en la imagen `Dockerfile.dev`.
+        - `requirements-prod.txt` — dependencias mínimas para producción. Se usa en `Dockerfile`.
+
+- Dockerfiles:
+        - `Dockerfile.dev` — imagen pensada para desarrollo: incluye herramientas de testing/format y utilidades para iterar rápido.
+        - `Dockerfile` — imagen optimizada para producción: minimal, no incluye herramientas de desarrollo y usa `requirements-prod.txt`.
+
+- Compose para desarrollo:
+        - `docker-compose.dev.yml` — orquesta los servicios locales para desarrollo (normalmente `api` y `cli`).
 
 Cómo usar la API y la CLI (paso a paso)
 
-1) Construir la imagen de desarrollo (opcional, el `up` hace build si falta):
+1) Construir la imagen de desarrollo y levantar los servicios
 
 ```bash
-sh ./scripts/build_dev.sh
+docker compose -f docker-compose.dev.yml up -d --build
 ```
 
-2) Levantar los servicios de desarrollo:
-
-```bash
-docker compose -f docker-compose.dev.yml up -d
-```
-
-3) Entrar a la shell del CLI (útil para ejecutar comandos Typer):
+2) Entrar a la shell del CLI (útil para ejecutar comandos Typer):
 
 ```bash
 docker compose -f docker-compose.dev.yml exec cli sh
@@ -234,7 +230,7 @@ python -m src.cli_app list-tools
 python -m src.cli_app create "AWS" --description "Despliegue en la nube" --link "https://aws.com"
 ```
 
-4) Usar la API desde el host (documentación interactiva en /docs):
+3) Usar la API desde el host (documentación interactiva en /docs):
 
 ```bash
 curl http://localhost:8000/  # o la ruta health/ según la app
@@ -242,7 +238,7 @@ curl http://localhost:8000/  # o la ruta health/ según la app
 http://localhost:8000/docs
 ```
 
-5) Ejecutar migraciones (Alembic) usando el contenedor CLI (usa `.env` para DB_URL_SYNC):
+4) Ejecutar migraciones (Alembic) usando el contenedor CLI (usa `.env` para DB_URL_SYNC):
 
 ```bash
 docker compose -f docker-compose.dev.yml exec cli alembic upgrade head
@@ -254,16 +250,6 @@ Consejos rápidos
 ```
 LOG_LEVEL=INFO
 ```
-
-- Si prefieres no escribir `-f docker-compose.dev.yml` cada vez, añade un alias en tu shell:
-
-```bash
-alias dcd='docker compose -f docker-compose.dev.yml'
-# luego:
-dcd up -d
-dcd exec cli sh
-```
-
 
 ---
 
