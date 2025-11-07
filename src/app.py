@@ -5,7 +5,7 @@ from uuid import uuid4
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.adapters.api.routes import health, herramientas
+from src.adapters.api.routes import health, tools
 from src.config import settings
 from src.log import logger, new_request_id, request_id_ctx_var
 
@@ -99,5 +99,5 @@ if origins:
 
 
 app.include_router(health.router)  # type: ignore
-# User routes removed — application only exposes herramientas
-app.include_router(herramientas.router)  # type: ignore
+# User routes: expose tools
+app.include_router(tools.router)  # type: ignore

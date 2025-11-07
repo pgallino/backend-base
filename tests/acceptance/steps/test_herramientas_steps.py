@@ -2,7 +2,7 @@ import json
 from pytest_bdd import scenarios, given, when, then, parsers
 from fastapi.testclient import TestClient
 
-scenarios("../features/herramientas.feature")
+scenarios("../features/tools.feature")
 
 @given("the API is running")
 def api_is_running(client: TestClient):
@@ -11,7 +11,7 @@ def api_is_running(client: TestClient):
 @given("a tool exists")
 def tool_exists(client: TestClient, context: dict):
     payload = {"name": "fastapi", "description": "web framework"}
-    resp = client.post("/herramientas", json=payload)
+    resp = client.post("/tools", json=payload)
     try:
         data = resp.json()
         context["created_id"] = int(data.get("id"))
@@ -23,7 +23,7 @@ def tool_exists(client: TestClient, context: dict):
 @when("I GET tool by id")
 def i_get_tool_by_id(client: TestClient, context: dict):
     tool_id = context.get("created_id", 1)
-    context["response"] = client.get(f"/herramientas/{tool_id}")
+    context["response"] = client.get(f"/tools/{tool_id}")
 
 
 @when(parsers.parse('I POST "{path}" with body \'{body}\''))
@@ -42,13 +42,13 @@ def i_get_path(client: TestClient, context: dict, path: str):
 def put_tool_by_id_with_body(client: TestClient, context: dict, body: str):
     tool_id = context.get("created_id", 1)
     payload = json.loads(body)
-    context["response"] = client.put(f"/herramientas/{tool_id}", json=payload)
+    context["response"] = client.put(f"/tools/{tool_id}", json=payload)
 
 
 @when("I DELETE tool by id")
 def delete_tool_by_id(client: TestClient, context: dict):
     tool_id = context.get("created_id", 1)
-    context["response"] = client.delete(f"/herramientas/{tool_id}")
+    context["response"] = client.delete(f"/tools/{tool_id}")
 
 
 @then(parsers.parse("the response status code should be {status_code:d}"))
@@ -60,7 +60,7 @@ def response_status_should_be(context: dict, status_code: int):
 @then(parsers.parse('the response should contain key "{key}" with value "{value}"'))
 def response_should_contain_key_value(context: dict, key: str, value: str):
     payload = context["response"].json()
-    # payload may be a list (for GET /herramientas), handle both
+    # payload may be a list (for GET /tools), handle both
     if isinstance(payload, list):
         # check any element has the expected key/value
         assert any(str(item.get(key)) == value for item in payload)

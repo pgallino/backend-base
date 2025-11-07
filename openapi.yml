@@ -26,11 +26,11 @@ paths:
                 example:
                   project_name: BackendBase
                   environment: dev
-  /herramientas:
+  /tools:
     post:
       summary: Create tool
       tags:
-        - herramientas
+        - tools
       requestBody:
         required: true
         content:
@@ -50,7 +50,7 @@ paths:
     get:
       summary: List tools
       tags:
-        - herramientas
+        - tools
       responses:
         '200':
           description: OK
@@ -60,11 +60,11 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Tool'
-  /herramientas/{tool_id}:
+  /tools/{tool_id}:
     get:
       summary: Get tool by id
       tags:
-        - herramientas
+        - tools
       parameters:
         - in: path
           name: tool_id

@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from src.adapters.api.facade_instance import api_facade
 from src.log import logger
 
-router = APIRouter(tags=["herramientas"])  # Spanish path tag
+router = APIRouter(tags=["tools"])  # English path tag
 
 
 class ToolCreateRequest(BaseModel):
@@ -22,7 +22,7 @@ class ToolUpdateRequest(BaseModel):
     link: str | None = None
 
 
-@router.post("/herramientas", response_model=None, status_code=status.HTTP_201_CREATED)
+@router.post("/tools", response_model=None, status_code=status.HTTP_201_CREATED)
 async def create_tool_route(request: ToolCreateRequest):
     logger.info("API: create_tool request name=%s", request.name)
     tool = await api_facade.create_tool(
@@ -33,9 +33,7 @@ async def create_tool_route(request: ToolCreateRequest):
     return JSONResponse(content=asdict(tool), status_code=status.HTTP_201_CREATED)
 
 
-@router.get(
-    "/herramientas/{tool_id}", response_model=None, status_code=status.HTTP_200_OK
-)
+@router.get("/tools/{tool_id}", response_model=None, status_code=status.HTTP_200_OK)
 async def get_tool_route(tool_id: int):
     logger.info("API: get_tool request id=%s", tool_id)
     tool = await api_facade.get_tool(tool_id)
@@ -46,7 +44,7 @@ async def get_tool_route(tool_id: int):
     return JSONResponse(content=asdict(tool), status_code=status.HTTP_200_OK)
 
 
-@router.get("/herramientas", response_model=None, status_code=status.HTTP_200_OK)
+@router.get("/tools", response_model=None, status_code=status.HTTP_200_OK)
 async def list_tools_route():
     logger.info("API: list_tools request")
     tools = await api_facade.list_tools()
@@ -55,9 +53,7 @@ async def list_tools_route():
     return JSONResponse(content=content, status_code=status.HTTP_200_OK)
 
 
-@router.put(
-    "/herramientas/{tool_id}", response_model=None, status_code=status.HTTP_200_OK
-)
+@router.put("/tools/{tool_id}", response_model=None, status_code=status.HTTP_200_OK)
 async def replace_tool_route(tool_id: int, request: ToolCreateRequest):
     """PUT: replace the tool resource with the provided representation.
 
@@ -79,7 +75,7 @@ async def replace_tool_route(tool_id: int, request: ToolCreateRequest):
 
 
 @router.delete(
-    "/herramientas/{tool_id}",
+    "/tools/{tool_id}",
     response_model=None,
     status_code=status.HTTP_204_NO_CONTENT,
 )
