@@ -194,7 +194,7 @@ En este repositorio conviven dos "apps" distintas que comparten la misma base de
 - CLI (Typer): una interfaz de línea de comandos que reutiliza la lógica de la aplicación (fachada). El entrypoint del CLI está en `src.application.cli_app`.
 
 Por qué dos aplicaciones?
-- Muestra que, reutilizando la misma fachada de aplicación y sin modificar el código interno del dominio, se pueden exponer múltiples interfaces (por ejemplo HTTP y CLI) que comparten exactamente la misma lógica. 
+- Muestra que, reutilizando la misma fachada de aplicación y sin modificar el código interno del dominio, se pueden exponer múltiples interfaces (por ejemplo HTTP y CLI) que comparten exactamente la misma lógica. ![CLI & API architecture](doc/img/cli_api.png)
 
 Arquitectura de Docker / dependencias
 
