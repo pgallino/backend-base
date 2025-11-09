@@ -3,15 +3,15 @@ from typing import Optional
 
 import typer
 
-# Import the facade at command runtime from src.cli_app to avoid circular imports
+from src.application.cli_app import app, cli_facade
 
-app = typer.Typer(help="CLI for the backend application (tools)")
+# The Typer `app` is created in `src.application.cli_app` (the application
+# entrypoint). This module only registers commands on that app.
 
 
 @app.command()
 def list_tools():
     """List all tools."""
-    from src.application.cli_app import cli_facade
 
     facade = cli_facade
 
@@ -26,7 +26,6 @@ def list_tools():
 @app.command()
 def get_tool(tool_id: int):
     """Get a single tool by id."""
-    from src.application.cli_app import cli_facade
 
     facade = cli_facade
 
@@ -43,7 +42,6 @@ def get_tool(tool_id: int):
 @app.command()
 def create(name: str, description: Optional[str] = "", link: Optional[str] = ""):
     """Create a new tool."""
-    from src.application.cli_app import cli_facade
 
     facade = cli_facade
 
@@ -59,7 +57,6 @@ def create(name: str, description: Optional[str] = "", link: Optional[str] = "")
 @app.command()
 def delete(tool_id: int):
     """Delete a tool by id."""
-    from src.application.cli_app import cli_facade
 
     facade = cli_facade
 
@@ -73,7 +70,7 @@ def delete(tool_id: int):
     asyncio.run(_inner())
 
 
-def main():
+def main() -> None:
     app()
 
 

@@ -86,7 +86,10 @@ Esta separación facilita el testing, la evolución del código y la independenc
 
 ```bash
 src/
-├── app.py                  # Punto de entrada (FastAPI)
+├── application/
+│   ├── api_app.py          # Punto de entrada (FastAPI)
+│   └── cli_app.py          # Entrypoints (API + CLI) expuestos desde `src.application`
+├── config.py               # Configuración central
 ├── config.py               # Configuración central
 ├── adapters/
 │   ├── api/                # Endpoints + fachada
@@ -195,7 +198,7 @@ docker compose -f docker-compose.dev.yml exec api sh
 En este repositorio conviven dos "apps" distintas que comparten la misma base de código y la misma fachada de aplicación:
 
 - API (FastAPI): el servidor HTTP que expone los endpoints REST/OpenAPI. El entrypoint de la API está en `src.application.api_app` y en desarrollo se ejecuta con `uvicorn`.
-- CLI (Typer): una interfaz de línea de comandos que reutiliza la lógica de la aplicación (fachada). El entrypoint del CLI está en `src.cli_app`.
+- CLI (Typer): una interfaz de línea de comandos que reutiliza la lógica de la aplicación (fachada). El entrypoint del CLI está en `src.application.cli_app`.
 
 Por qué dos aplicaciones?
 - Muestra que, reutilizando la misma fachada de aplicación y sin modificar el código interno del dominio, se pueden exponer múltiples interfaces (por ejemplo HTTP y CLI) que comparten exactamente la misma lógica. 
@@ -226,8 +229,8 @@ docker compose -f docker-compose.dev.yml up -d --build
 ```bash
 docker compose -f docker-compose.dev.yml exec cli sh
 # dentro del contenedor:
-python -m src.cli_app list-tools
-python -m src.cli_app create "AWS" --description "Despliegue en la nube" --link "https://aws.com"
+python -m src.application.cli_app list-tools
+python -m src.application.cli_app create "AWS" --description "Despliegue en la nube" --link "https://aws.com"
 ```
 
 3) Usar la API desde el host (documentación interactiva en /docs):

@@ -1,7 +1,7 @@
 import pytest
 from sqlalchemy import create_engine, text
 from fastapi.testclient import TestClient
-from src.app import app
+from src.application.api_app import app
 from src.adapters.db.models.models import Base
 
 
