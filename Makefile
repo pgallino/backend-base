@@ -57,18 +57,13 @@ test-acceptance:
 # Migrations
 # -----------------------------
 
-# Run alembic commands locally (host) or use the container via dev-up
-alembic-init:
-	PYTHONPATH=$(shell pwd) alembic init alembic
-
-alembic-migrate:
-	PYTHONPATH=$(shell pwd) alembic revision --autogenerate -m "Nueva migracion"
-
 # Upgrade DB schema (host)
 alembic-upgrade:
 	PYTHONPATH=$(shell pwd) alembic upgrade head
 
 # Shortcut: run migrations inside dev container (recommended for dev)
+# This target is useful when you want to run the upgrade from inside the
+# development container (keeps the same behaviour as before).
 migrate:
 	@echo "-> Ejecutando migraciones (dentro del contenedor dev)"
 	PYTHONPATH=$(shell pwd) alembic upgrade head

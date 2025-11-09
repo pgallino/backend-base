@@ -90,7 +90,6 @@ src/
 │   ├── api_app.py          # Punto de entrada (FastAPI)
 │   └── cli_app.py          # Entrypoints (API + CLI) expuestos desde `src.application`
 ├── config.py               # Configuración central
-├── config.py               # Configuración central
 ├── adapters/
 │   ├── api/                # Endpoints + fachada
 │   └── db/                 # Modelos y repositorios SQLAlchemy
@@ -153,17 +152,11 @@ Alembic es la herramienta de migrations para SQLAlchemy: permite crear "revision
 Hemos añadido objetivos en el `Makefile` para envolver Alembic y simplificar el flujo. Usa los objetivos `make` desde tu máquina o dentro del contenedor:
 
 ```bash
-# Inicializar (solo la primera vez en un repo nuevo):
-make alembic-init
-
-# Crear una nueva migración (autogenerate + archivo en alembic/versions):
-make alembic-migrate
-
 # Aplicar migraciones (upgrade hasta head):
 make alembic-upgrade
 
-# Deshacer la última migración (downgrade -1):
-make alembic-downgrade
+# Ejecutar migraciones dentro del contenedor de desarrollo:
+make migrate
 ```
 
 Usar `make` garantiza que `PYTHONPATH` y el contexto de ejecución estén correctamente definidos para que Alembic encuentre el módulo `src`.
@@ -311,14 +304,18 @@ Con esto las pruebas BDD permanecen rápidas, deterministas y fáciles de ejecut
 ## 🧰 Makefile y comandos útiles
 
 | Comando | Descripción |
-|----------|--------------|
-| `make up` | Construye y levanta contenedores |
-| `make down` | Detiene y elimina servicios |
-| `make test` | Ejecuta toda la suite de tests |
-| `make format` | Formatea el código con black/isort |
-| `make lint` | Ejecuta linters y type-checks |
-| `make check` | Corre `format-check` + `lint` |
-| `make shell` | Abre una shell en el contenedor backend |
+|---:|:---|
+| `make help` (por defecto) | Muestra la ayuda con los comandos principales del proyecto.
+| `make format` | Formatea el código con `black` e `isort`.
+| `make format-check` | Verifica el formato sin modificar archivos (comprobar antes de commitear).
+| `make lint` | Ejecuta chequeos estáticos (mypy) para tipos.
+| `make check` | Ejecuta `format-check` y `lint` (útil en CI pre-merge).
+| `make test` | Ejecuta todos los tests (unit + acceptance).
+| `make test-unit` | Ejecuta solo los tests unitarios.
+| `make test-acceptance` | Ejecuta solo los tests de aceptación (BDD).
+| `make alembic-upgrade` | Aplica las migraciones hasta `head` usando Alembic.
+| `make migrate` | Ejecuta las migraciones dentro del contenedor de desarrollo (con `PYTHONPATH` adecuado).
+| `make ci` | Atajo para `format-check`, `lint` y `test` — pensado para CI.
 
 ---
 
