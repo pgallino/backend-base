@@ -6,11 +6,14 @@ if TYPE_CHECKING:
 import typer
 
 from src.application.factory import create_facade
-from src.config import settings
+from src.config import cli_settings, ensure_common_required_env_vars
+
+# Ensure common environment variables are present for CLI runs.
+ensure_common_required_env_vars()
 
 # Instantiate facade for the CLI adapter
 cli_facade = create_facade(
-    project_name=settings.PROJECT_NAME, environment=settings.ENVIRONMENT
+    project_name=cli_settings.PROJECT_NAME, environment=cli_settings.ENVIRONMENT
 )
 
 # Create the Typer app here (application entrypoint owns the app object).

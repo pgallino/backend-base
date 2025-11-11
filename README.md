@@ -123,6 +123,7 @@ DB_URL_SYNC=sqlite:///dev.db
 DB_URL_ASYNC=sqlite+aiosqlite:///dev.db
 ALLOWED_ORIGINS=http://localhost:3000
 SECRET_KEY=super-secret-key
+API_KEY=dev_api_key
 ```
 
 > ⚠️ **No subas secretos reales al repositorio.** Usa secrets en CI/CD o servicios como Render o AWS.
@@ -337,6 +338,7 @@ Variables/Secrets clave en AWS:
 
 - `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `ECR_REPOSITORY`
 - `DB_URL_ASYNC`, `SECRET_KEY`, `ALLOWED_ORIGINS`
+- `DB_URL_ASYNC`, `SECRET_KEY`, `ALLOWED_ORIGINS`, `API_KEY`
 
 
 ### Render
@@ -346,6 +348,7 @@ El pipeline de despliegue de este repositorio invoca el workflow de migraciones 
 Variables/Secrets a configurar en Render:
 
 - `RENDER_API_KEY`, `RENDER_SERVICE_ID`, `DB_URL_ASYNC`, `ALLOWED_ORIGINS`
+- `RENDER_API_KEY`, `RENDER_SERVICE_ID`, `DB_URL_ASYNC`, `ALLOWED_ORIGINS`, `API_KEY`
 
 ### GitHub Actions
 
@@ -375,6 +378,7 @@ A continuación tienes una tabla con los secrets y variables que aparecen en los
 | RENDER_URL | `deploy-render.yml` | URL pública para health-check (opcional; usada por el workflow) |
 | SECRET_KEY | runtime | Clave secreta de la aplicación (runtime) |
 | ALLOWED_ORIGINS | runtime | Orígenes permitidos para CORS (runtime) |
+| API_KEY | runtime (API) | API key para proteger endpoints HTTP; si se establece, el servidor requerirá el header `X-API-Key` en peticiones protegidas. |
 
 > Nota: `NEON_DB_SYNC` es el secret requerido por `deploy-neon.yml` y el workflow lo exporta como `DB_URL_SYNC` para ejecutar `make alembic-upgrade`. `DB_URL_ASYNC` debe establecerse en el entorno del servicio para que la app use el driver asíncrono en producción.
 

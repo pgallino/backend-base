@@ -1,4 +1,5 @@
 import logging
+import os
 import pytest
 from sqlalchemy import create_engine, text
 from fastapi.testclient import TestClient
@@ -83,3 +84,13 @@ def client() -> TestClient:
 @pytest.fixture
 def context():
     return {}
+
+
+@pytest.fixture
+def api_headers():
+    """Return headers including X-API-Key when API_KEY is set in the environment.
+
+    Keeps header logic centralized for acceptance tests.
+    """
+    key = os.getenv("API_KEY")
+    return {"X-API-Key": key} if key else {}

@@ -1,12 +1,16 @@
 from dataclasses import asdict
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
+from src.adapters.api.security import get_api_key
 from src.log import logger
 
 router = APIRouter(tags=["tools"])  # English path tag
+
+# Protect tools endpoints with API key dependency (no-op if API_KEY not set)
+router.dependencies = [Depends(get_api_key)]
 
 
 class ToolCreateRequest(BaseModel):

@@ -11,9 +11,9 @@ def service_is_available(client: TestClient):
 
 
 @given(parsers.parse('a tool named "{name}" exists'))
-def tool_exists(client: TestClient, context: dict, name: str):
+def tool_exists(client: TestClient, context: dict, name: str, api_headers: dict):
     payload = {"name": name, "description": "web framework"}
-    resp = client.post("/tools", json=payload)
+    resp = client.post("/tools", json=payload, headers=api_headers)
     try:
         data = resp.json()
         context["created_id"] = int(data.get("id"))
@@ -23,9 +23,9 @@ def tool_exists(client: TestClient, context: dict, name: str):
 
 
 @when(parsers.parse('I create a tool with name "{name}" and description "{description}"'))
-def i_create_tool(client: TestClient, context: dict, name: str, description: str):
+def i_create_tool(client: TestClient, context: dict, name: str, description: str, api_headers: dict):
     payload = {"name": name, "description": description}
-    resp = client.post("/tools", json=payload)
+    resp = client.post("/tools", json=payload, headers=api_headers)
     context["response"] = resp
     try:
         data = resp.json()
@@ -50,8 +50,8 @@ def created_tool_includes(context: dict, name: str, description: str):
 
 
 @when("I request the list of tools")
-def i_request_list(client: TestClient, context: dict):
-    context["response"] = client.get("/tools")
+def i_request_list(client: TestClient, context: dict, api_headers: dict):
+    context["response"] = client.get("/tools", headers=api_headers)
 
 
 @then(parsers.parse('the list contains a tool with name "{name}"'))
@@ -63,9 +63,9 @@ def list_contains_tool(context: dict, name: str):
 
 
 @when("I retrieve that tool")
-def retrieve_that_tool(client: TestClient, context: dict):
+def retrieve_that_tool(client: TestClient, context: dict, api_headers: dict):
     tool_id = context.get("created_id", 1)
-    context["response"] = client.get(f"/tools/{tool_id}")
+    context["response"] = client.get(f"/tools/{tool_id}", headers=api_headers)
 
 
 @then(parsers.parse('I receive the tool details including name "{name}"'))
@@ -76,10 +76,10 @@ def receive_tool_details(context: dict, name: str):
 
 
 @when(parsers.parse('I update the tool\'s name to "{name}" and set link "{link}" and description "{description}"'))
-def update_tool(client: TestClient, context: dict, name: str, link: str, description: str):
+def update_tool(client: TestClient, context: dict, name: str, link: str, description: str, api_headers: dict):
     tool_id = context.get("created_id", 1)
     payload = {"name": name, "link": link, "description": description}
-    context["response"] = client.put(f"/tools/{tool_id}", json=payload)
+    context["response"] = client.put(f"/tools/{tool_id}", json=payload, headers=api_headers)
 
 
 @then("the tool is updated")
@@ -98,13 +98,13 @@ def updated_tool_includes(context: dict, name: str, link: str):
 
 
 @when("I remove that tool")
-def remove_tool(client: TestClient, context: dict):
+def remove_tool(client: TestClient, context: dict, api_headers: dict):
     tool_id = context.get("created_id", 1)
-    context["response"] = client.delete(f"/tools/{tool_id}")
+    context["response"] = client.delete(f"/tools/{tool_id}", headers=api_headers)
 
 
 @then("subsequently retrieving the tool indicates it no longer exists")
-def retrieving_tool_no_longer_exists(client: TestClient, context: dict):
+def retrieving_tool_no_longer_exists(client: TestClient, context: dict, api_headers: dict):
     tool_id = context.get("created_id", 1)
-    resp = client.get(f"/tools/{tool_id}")
+    resp = client.get(f"/tools/{tool_id}", headers=api_headers)
     assert resp.status_code == 404

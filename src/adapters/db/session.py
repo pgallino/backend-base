@@ -4,8 +4,8 @@ from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-# Read DB URL from central Settings
-from src.config import settings
+# Read DB URL from central core settings (only needs DB / SQL flags)
+from src.config import core_settings as settings
 
 DB_URL = settings.DB_URL_ASYNC
 

@@ -1,19 +1,36 @@
 import os
 from pathlib import Path
-from typing import List, Optional, final
+from typing import List, Optional
 
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-@final
-class Settings(BaseSettings):
-    # Do NOT load a .env file here. All values must come from the environment.
+class CommonSettings(BaseSettings):
+    """Settings shared by both CLI and API applications.
+
+    This class contains values that both adapters may need (project name,
+    environment, DB urls, CORS flags). We intentionally avoid including API
+    specific secrets here so that the CLI can use a settings object without an
+    API key field.
+    """
+
     model_config = SettingsConfigDict(extra="ignore")
 
-    # All settings are required and must be provided via environment variables.
     PROJECT_NAME: str
     ENVIRONMENT: str
+    # Note: CORS (allowed origins) is API-specific and defined on APISettings.
+
+    DB_URL_ASYNC: str
+    DB_URL_SYNC: Optional[str] = None
+
+    SQL_ECHO: bool = False
+
+
+class APISettings(CommonSettings):
+    """Settings used by the HTTP API application (includes API_KEY)."""
+
+    API_KEY: Optional[str] = None
     # CORS configuration (optional):
     # - If ALLOW_ALL_ORIGINS is true, the app will allow requests from any origin
     #   (useful for public APIs or temporary testing). Do NOT enable in sensitive
@@ -22,14 +39,13 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: Optional[str] = None
     ALLOW_ALL_ORIGINS: bool = False
 
-    # Database URLs
-    DB_URL_ASYNC: str
-    # DB_URL_SYNC is optional at runtime: required only for migration jobs
-    # (the `deploy-neon.yml` workflow will pass NEON_DB_SYNC -> DB_URL_SYNC).
-    DB_URL_SYNC: Optional[str] = None
 
-    # SQLAlchemy echo flag (enable SQL logging). Provide SQL_ECHO in env (true/false)
-    SQL_ECHO: bool = False
+class CLISettings(CommonSettings):
+    """Settings used by CLI application. Intentionally does not expose
+    API_KEY so CLI code cannot accidentally rely on API-only configuration.
+    """
+
+    pass
 
 
 # Developer convenience: if a local .env file exists in the repo root, load it
@@ -79,8 +95,46 @@ _required_env_vars = [
 # Fail fast with a clear message if any required env var is missing.
 _ensure_required_env_vars(_required_env_vars)
 
+
+# API-specific required environment variables. Keep the check out of module
+# import-time for CLI use; the API application should call
+# `ensure_api_required_env_vars()` before starting to enforce these.
+_api_required_env_vars = _required_env_vars + ["API_KEY"]
+
+
+def ensure_api_required_env_vars() -> None:
+    """Ensure environment variables required by the API are present.
+
+    This function should be called by API entrypoints (for example in
+    `src/application/api_app.py`) before instantiating or using API-only
+    settings. We intentionally avoid enforcing API secrets at module import
+    time so CLI runs don't fail when API-only env vars are absent.
+    """
+    _ensure_required_env_vars(_api_required_env_vars)
+
+
+def ensure_common_required_env_vars() -> None:
+    """Ensure the common/core environment variables are present.
+
+    This is a thin wrapper around the internal helper so callers (CLI startup)
+    can ask for the same enforcement in an explicit and readable way.
+    """
+    _ensure_required_env_vars(_required_env_vars)
+
+
 # Instantiate settings now that we've ensured the environment contains the
 # required values. Mypy may still complain about missing constructor args
 # because the class declares required attributes, but at runtime the values
 # are supplied from the environment; use an inline ignore for the call site.
-settings = Settings()  # type: ignore[call-arg]
+# Backwards-compatible single `settings` instance: keep this pointing to the
+# API-focused settings so existing imports (`from src.config import settings`)
+# continue to work. New code should import `api_settings` or `cli_settings`
+# explicitly to make its intent clear.
+api_settings = APISettings()  # type: ignore[call-arg]
+cli_settings = CLISettings()  # type: ignore[call-arg]
+
+# Minimal/common settings object for adapters that only need core values
+# (DB urls, SQL_ECHO, PROJECT_NAME, ENVIRONMENT). Use this from modules
+# like `src.adapters.db.session` to avoid importing API-only or CLI-only
+# settings objects.
+core_settings = CommonSettings()  # type: ignore[call-arg]
