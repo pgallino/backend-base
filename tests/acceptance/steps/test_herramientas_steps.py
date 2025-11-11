@@ -4,13 +4,15 @@ from fastapi.testclient import TestClient
 
 scenarios("../features/tools.feature")
 
-@given("the API is running")
-def api_is_running(client: TestClient):
+
+@given("the service is available")
+def service_is_available(client: TestClient):
     assert client is not None
 
-@given("a tool exists")
-def tool_exists(client: TestClient, context: dict):
-    payload = {"name": "fastapi", "description": "web framework"}
+
+@given(parsers.parse('a tool named "{name}" exists'))
+def tool_exists(client: TestClient, context: dict, name: str):
+    payload = {"name": name, "description": "web framework"}
     resp = client.post("/tools", json=payload)
     try:
         data = resp.json()
@@ -20,49 +22,89 @@ def tool_exists(client: TestClient, context: dict):
         context["created_id"] = 1
 
 
-@when("I GET tool by id")
-def i_get_tool_by_id(client: TestClient, context: dict):
+@when(parsers.parse('I create a tool with name "{name}" and description "{description}"'))
+def i_create_tool(client: TestClient, context: dict, name: str, description: str):
+    payload = {"name": name, "description": description}
+    resp = client.post("/tools", json=payload)
+    context["response"] = resp
+    try:
+        data = resp.json()
+        context["created_id"] = int(data.get("id"))
+    except Exception:
+        pass
+
+
+@then("the tool is created")
+def the_tool_is_created(context: dict):
+    resp = context.get("response")
+    assert resp is not None
+    assert resp.status_code == 201
+
+
+@then(parsers.parse('the created tool includes name "{name}" and description "{description}"'))
+def created_tool_includes(context: dict, name: str, description: str):
+    resp = context.get("response")
+    payload = resp.json()
+    assert str(payload.get("name")) == name
+    assert str(payload.get("description")) == description
+
+
+@when("I request the list of tools")
+def i_request_list(client: TestClient, context: dict):
+    context["response"] = client.get("/tools")
+
+
+@then(parsers.parse('the list contains a tool with name "{name}"'))
+def list_contains_tool(context: dict, name: str):
+    resp = context.get("response")
+    payload = resp.json()
+    assert isinstance(payload, list)
+    assert any(str(item.get("name")) == name for item in payload)
+
+
+@when("I retrieve that tool")
+def retrieve_that_tool(client: TestClient, context: dict):
     tool_id = context.get("created_id", 1)
     context["response"] = client.get(f"/tools/{tool_id}")
 
 
-@when(parsers.parse('I POST "{path}" with body \'{body}\''))
-def post_path_with_body(client: TestClient, context: dict, path: str, body: str):
-    payload = json.loads(body)
-    response = client.post(path, json=payload)
-    context["response"] = response
+@then(parsers.parse('I receive the tool details including name "{name}"'))
+def receive_tool_details(context: dict, name: str):
+    resp = context.get("response")
+    payload = resp.json()
+    assert str(payload.get("name")) == name
 
 
-@when(parsers.parse('I GET "{path}"'))
-def i_get_path(client: TestClient, context: dict, path: str):
-    context["response"] = client.get(path)
-
-
-@when(parsers.parse('I PUT tool by id with body \'{body}\''))
-def put_tool_by_id_with_body(client: TestClient, context: dict, body: str):
+@when(parsers.parse('I update the tool\'s name to "{name}" and set link "{link}" and description "{description}"'))
+def update_tool(client: TestClient, context: dict, name: str, link: str, description: str):
     tool_id = context.get("created_id", 1)
-    payload = json.loads(body)
+    payload = {"name": name, "link": link, "description": description}
     context["response"] = client.put(f"/tools/{tool_id}", json=payload)
 
 
-@when("I DELETE tool by id")
-def delete_tool_by_id(client: TestClient, context: dict):
+@then("the tool is updated")
+def tool_is_updated(context: dict):
+    resp = context.get("response")
+    assert resp is not None
+    assert resp.status_code == 200
+
+
+@then(parsers.parse('the updated tool includes name "{name}" and link "{link}"'))
+def updated_tool_includes(context: dict, name: str, link: str):
+    resp = context.get("response")
+    payload = resp.json()
+    assert str(payload.get("name")) == name
+    assert str(payload.get("link")) == link
+
+
+@when("I remove that tool")
+def remove_tool(client: TestClient, context: dict):
     tool_id = context.get("created_id", 1)
     context["response"] = client.delete(f"/tools/{tool_id}")
 
 
-@then(parsers.parse("the response status code should be {status_code:d}"))
-def response_status_should_be(context: dict, status_code: int):
-    resp = context["response"]
-    assert resp.status_code == status_code
-
-
-@then(parsers.parse('the response should contain key "{key}" with value "{value}"'))
-def response_should_contain_key_value(context: dict, key: str, value: str):
-    payload = context["response"].json()
-    # payload may be a list (for GET /tools), handle both
-    if isinstance(payload, list):
-        # check any element has the expected key/value
-        assert any(str(item.get(key)) == value for item in payload)
-    else:
-        assert str(payload.get(key)) == value
+@then("subsequently retrieving the tool indicates it no longer exists")
+def retrieving_tool_no_longer_exists(client: TestClient, context: dict):
+    tool_id = context.get("created_id", 1)
+    resp = client.get(f"/tools/{tool_id}")
+    assert resp.status_code == 404

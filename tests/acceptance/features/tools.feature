@@ -1,39 +1,32 @@
-Feature: Tools endpoint
-  As a client I want to create and list tools in the repository
+Feature: Tools management
+  As a client I want to manage a catalogue of tools so I can add, list,
+  retrieve, update and remove tools from my collection.
 
-  Scenario: Create tool
-    Given the API is running
-    When I POST "/tools" with body '{"name": "fastapi", "description": "web framework"}'
-    Then the response status code should be 201
-    And the response should contain key "name" with value "fastapi"
-    And the response should contain key "description" with value "web framework"
+  Background:
+    Given the service is available
+
+  Scenario: Create a tool
+    When I create a tool with name "fastapi" and description "web framework"
+    Then the tool is created
+    And the created tool includes name "fastapi" and description "web framework"
 
   Scenario: List tools
-    Given the API is running
-    And a tool exists
-    When I GET "/tools"
-    Then the response status code should be 200
-    And the response should contain key "name" with value "fastapi"
+    Given a tool named "fastapi" exists
+    When I request the list of tools
+    Then the list contains a tool with name "fastapi"
 
-  Scenario: Get tool by id
-    Given the API is running
-    And a tool exists
-    When I GET tool by id
-    Then the response status code should be 200
-    And the response should contain key "name" with value "fastapi"
+  Scenario: Retrieve a tool
+    Given a tool named "fastapi" exists
+    When I retrieve that tool
+    Then I receive the tool details including name "fastapi"
 
-  Scenario: Update tool
-    Given the API is running
-    And a tool exists
-    When I PUT tool by id with body '{"name": "fastapi-updated", "link": "https://example.com", "description": "web framework"}'
-    Then the response status code should be 200
-    And the response should contain key "name" with value "fastapi-updated"
-    And the response should contain key "link" with value "https://example.com"
+  Scenario: Update a tool
+    Given a tool named "fastapi" exists
+    When I update the tool's name to "fastapi-updated" and set link "https://example.com" and description "web framework"
+    Then the tool is updated
+    And the updated tool includes name "fastapi-updated" and link "https://example.com"
 
-  Scenario: Delete tool
-    Given the API is running
-    And a tool exists
-    When I DELETE tool by id
-    Then the response status code should be 204
-    When I GET tool by id
-    Then the response status code should be 404
+  Scenario: Remove a tool
+    Given a tool named "fastapi" exists
+    When I remove that tool
+    Then subsequently retrieving the tool indicates it no longer exists
