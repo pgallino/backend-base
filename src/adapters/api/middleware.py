@@ -41,7 +41,15 @@ def add_middlewares(app: FastAPI, settings: Any) -> None:
             allow_origins=origins,
             allow_credentials=allow_credentials,
             allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            allow_headers=["Authorization", "Content-Type", "Accept"],
+            # Include X-API-Key and common X-* headers so clients can send them
+            allow_headers=[
+                "Authorization",
+                "Content-Type",
+                "Accept",
+                "X-API-Key",
+                "X-Requested-With",
+                "X-Request-ID",
+            ],
             max_age=3600,
         )
         logger.debug(
