@@ -23,8 +23,10 @@ class CommonSettings(BaseSettings):
 
     DB_URL_ASYNC: str
     DB_URL_SYNC: Optional[str] = None
-
     SQL_ECHO: bool = False
+    # Global log level for the application. Can be overridden per-environment.
+    # Expected values: DEBUG, INFO, WARNING, ERROR, CRITICAL
+    LOG_LEVEL: str = "INFO"
 
 
 class APISettings(CommonSettings):

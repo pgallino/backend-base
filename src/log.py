@@ -1,8 +1,9 @@
 import contextvars
 import logging
-import os
 import sys
 from uuid import uuid4
+
+from src.config import core_settings as settings
 
 # Formato de log legible para desarrollo. Incluimos request_id para trazar
 # peticiones a través de capas. Nivel por defecto: DEBUG (desarrollo).
@@ -34,13 +35,14 @@ def setup_logging():
     for h in list(root.handlers):
         root.removeHandler(h)
     root.addHandler(handler)
-    # Allow overriding the log level from environment (useful for .env in dev)
-    # Expected values: DEBUG, INFO, WARNING, ERROR, CRITICAL
-    level_name = os.environ.get("LOG_LEVEL", "DEBUG").upper()
+    # Read the configured log level from central settings (core_settings.LOG_LEVEL).
+    # This keeps logging configuration in sync with application settings.
+    level_name = getattr(settings, "LOG_LEVEL", "DEBUG")
     try:
-        level = getattr(logging, level_name)
+        level = getattr(logging, str(level_name).upper())
     except Exception:
-        level = logging.DEBUG
+        # Fallback to INFO if the configured value is invalid
+        level = logging.INFO
     root.setLevel(level)
 
     # Reduce noise from very chatty third-party libraries unless debugging
