@@ -21,6 +21,11 @@ class ToolRepository(ABC):
         raise NotImplementedError()
 
     @abstractmethod
+    async def get_by_name(self, name: str) -> Optional[Tool]:
+        """Return a single Tool matching the given name, or None if not found."""
+        raise NotImplementedError()
+
+    @abstractmethod
     async def update(self, tool: Tool) -> Tool | None:
         """Update an existing tool. Return the updated Tool or None if not found."""
         raise NotImplementedError()

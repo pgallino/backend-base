@@ -6,6 +6,9 @@ from src.adapters.db.models.models import ToolModel
 from src.adapters.db.session import AsyncSessionLocal
 from src.domain.repositories.tool_repository import ToolRepository
 from src.domain.tool import Tool
+
+# repository should be agnostic about business rules like uniqueness;
+# ConflictError will be raised by the service when appropriate
 from src.log import logger
 
 
@@ -30,6 +33,22 @@ class SqlAlchemyToolRepository(ToolRepository):
                     link=getattr(row, "link"),
                 )
             logger.info("DB: tool id=%s not found", tool_id)
+            return None
+
+    async def get_by_name(self, name: str) -> Optional[Tool]:
+        async with AsyncSessionLocal() as session:
+            logger.debug("DB: get_by_name %s", name)
+            result = await session.execute(
+                select(ToolModel).where(ToolModel.name == name)
+            )
+            row = result.scalar_one_or_none()
+            if row:
+                return Tool(
+                    id=getattr(row, "id"),
+                    name=getattr(row, "name"),
+                    description=getattr(row, "description"),
+                    link=getattr(row, "link"),
+                )
             return None
 
     async def create(self, tool: Tool) -> Tool:
