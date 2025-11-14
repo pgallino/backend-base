@@ -15,8 +15,5 @@ dev.db
 .coverage
 .coverage.*
 htmlcov/
-coverage.xml
-coverage-acceptance.xml
-coverage-unit.xml
 
 .env
