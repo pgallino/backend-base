@@ -50,7 +50,7 @@ test-unit:
 	pytest --cov=src/domain --cov=src/adapters/db/repositories \
 		--cov-report=html:coverage-unit-html \
 		--cov-report=term-missing \
-		--cov-fail-under=75 tests/domain tests/adapters/db
+		--cov-fail-under=75 tests/unit
 
 test-acceptance:
 	@echo "-> Ejecutando tests de aceptación (BDD)..."

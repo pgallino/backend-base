@@ -84,3 +84,4 @@ async def test_tool_service_update_and_delete():
     # Ensure it's gone
     fetched = await service.get_tool(created.id)
     assert fetched is None
+
