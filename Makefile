@@ -47,10 +47,10 @@ test: test-unit test-acceptance
 
 test-unit:
 	@echo "-> Ejecutando tests unitarios..."
-	pytest --cov=src/domain \
+	pytest --cov=src/domain --cov=src/adapters \
 		--cov-report=html:coverage-unit-html \
 		--cov-report=term-missing \
-		--cov-fail-under=75 tests/unit
+		--cov-fail-under=75 --cov-config=.coveragerc tests/unit
 
 test-acceptance:
 	@echo "-> Ejecutando tests de aceptación (BDD)..."
