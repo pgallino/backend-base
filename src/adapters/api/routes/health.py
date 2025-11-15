@@ -1,8 +1,13 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Depends, status
 from fastapi.responses import JSONResponse
+
+from src.adapters.api.security import get_api_key
 
 # Creamos un router específico para rutas de salud/sistema
 router = APIRouter(tags=["health"])
+
+# Protect health endpoint with API key dependency (no-op if API_KEY not set)
+router.dependencies = [Depends(get_api_key)]
 
 
 @router.get("/", status_code=status.HTTP_200_OK)
