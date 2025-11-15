@@ -82,20 +82,54 @@ Esta separación facilita el testing, la evolución del código y la independenc
 
 ---
 
+## 🗂️ Estructura del proyecto (resumen)
+
+Una vista compacta de los elementos principales del repositorio, con comentarios sobre su rol:
+
+```text
 ## 🗂️ Estructura del proyecto
 
-```bash
+Una vista en forma de árbol (resumen), para localizar rápidamente carpetas y archivos clave:
+
+```text
+alembic.ini
+docker-compose.dev.yml
+Dockerfile
+Dockerfile.dev
+Makefile
+pyproject.toml
+README.md
+scripts/                 # scripts de utilidad (start/cleanup)
+alembic/
+├─ env.py
+└─ versions/
+   └─ 0001_create_tool_table.py
 src/
-├── application/
-│   ├── api_app.py          # Punto de entrada (FastAPI)
-│   └── cli_app.py          # Entrypoints (API + CLI) expuestos desde `src.application`
-├── config.py               # Configuración central
-├── adapters/
-│   ├── api/                # Endpoints + fachada
-│   └── db/                 # Modelos y repositorios SQLAlchemy
-├── domain/                 # Entidades y servicios de dominio
-alembic/                    # Migraciones de esquema
-tests/                      # Tests unitarios y BDD
+├─ config.py
+├─ log.py
+├─ adapters/
+│  ├─ api/
+│  │  ├─ middleware.py
+│  │  └─ routes/
+│  │     ├─ health.py
+│  │     └─ tools.py
+│  ├─ cli/
+│  │  └─ cli.py
+│  └─ db/
+│     ├─ session.py
+│     └─ repositories/
+│        └─ tool_repository.py
+├─ application/
+│  ├─ api_app.py
+│  ├─ cli_app.py
+│  └─ facade.py
+└─ domain/
+   ├─ tool.py
+   └─ tool_service.py
+tests/
+├─ acceptance/         # BDD scenarios (pytest-bdd + Gherkin)
+├─ integration/        # tests que usan DB real / Async fixtures
+└─ unit/               # tests de lógica pura y adapters mockeados
 ```
 
 ---
@@ -265,9 +299,30 @@ tests/
 ### Comandos
 
 ```bash
-make test            # Ejecuta todos los tests
-make test-unit       # Solo tests unitarios
-make test-acceptance # Solo tests BDD
+# Ejecuta todos los tests (unitarios + acceptance)
+make test
+
+# Ejecuta tests unitarios y genera reporte de cobertura enfocado en
+# los paquetes de dominio y adaptadores. Por defecto medimos cobertura
+# sobre `src/domain` y `src/adapters`. Ajusta `.coveragerc` para omitir
+# módulos concretos (por ejemplo `src/adapters/api` o
+# `src/domain/exceptions`) si querés excluirlos del informe.
+make test-unit
+
+# Ejecuta solo los tests de aceptación (BDD)
+make test-acceptance
+```
+
+### Pruebas de integración
+
+Las pruebas de integración en este proyecto verifican la interacción real entre los adaptadores (por ejemplo `adapters/db`) y la base de datos o servicios externos en un entorno controlado. Son más completas que los tests unitarios, pero más ligeras y orientadas a integración que los tests de aceptación BDD.
+
+- Ubicación: `tests/integration/`.
+- Qué cubren: comportamiento de los repositorios, migraciones mínimas, y flujos que requieren interacción con la base de datos real (no mocks). No ejecutan la app HTTP completa con BDD (eso queda para `tests/acceptance`).
+- Fixtures relevantes: las fixtures asíncronas que crean una `AsyncEngine` y `AsyncSession` de prueba se encuentran en `tests/integration/conftest.py` y preparan un esquema limpio para cada grupo de tests.
+
+```bash
+make test-integration
 ```
 
 > Las pruebas BDD usan `TestClient` de FastAPI y se ejecutan sin servidor externo.
@@ -290,14 +345,6 @@ make test-acceptance
 pytest tests/acceptance -k "herramientas" -s -vv
 ```
 
-- Ejecutar dentro del contenedor (recomendado para reproducibilidad):
-
-```bash
-make shell        # levanta y entra al contenedor
-# dentro del contenedor:
-make test-acceptance
-```
-
 Con esto las pruebas BDD permanecen rápidas, deterministas y fáciles de ejecutar tanto en tu máquina como en CI.
 
 ---
@@ -311,9 +358,10 @@ Con esto las pruebas BDD permanecen rápidas, deterministas y fáciles de ejecut
 | `make format-check` | Verifica el formato sin modificar archivos (comprobar antes de commitear).
 | `make lint` | Ejecuta chequeos estáticos (mypy) para tipos.
 | `make check` | Ejecuta `format-check` y `lint` (útil en CI pre-merge).
-| `make test` | Ejecuta todos los tests (unit + acceptance).
-| `make test-unit` | Ejecuta solo los tests unitarios.
-| `make test-acceptance` | Ejecuta solo los tests de aceptación (BDD).
+| `make test` | Ejecuta todos los tests (unit + acceptance). |
+| `make test-unit` | Ejecuta tests unitarios y genera cobertura sobre `src/domain` y `src/adapters` (usa `.coveragerc` para omitir módulos del informe). |
+| `make test-acceptance` | Ejecuta solo los tests de aceptación (BDD). |
+| `make test-integration` | Ejecuta tests de integración (repositorios y DB) en `tests/integration/`. |
 | `make alembic-upgrade` | Aplica las migraciones hasta `head` usando Alembic.
 | `make migrate` | Ejecuta las migraciones dentro del contenedor de desarrollo (con `PYTHONPATH` adecuado).
 | `make ci` | Atajo para `format-check`, `lint` y `test` — pensado para CI.
